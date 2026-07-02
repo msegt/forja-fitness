@@ -7,7 +7,7 @@ import { ProgressRing } from "@/components/ui/ProgressRing";
 import { Button } from "@/components/ui/Button";
 import type { Session } from "@/types";
 
-const seedSessions: Session[] = [
+const sampleSessions: Session[] = [
   {
     id: "session-1",
     day_label: "Day 1",
@@ -47,7 +47,7 @@ const seedSessions: Session[] = [
 ];
 
 export default function DashboardPage() {
-  const [sessions, setSessions] = useState(seedSessions);
+  const [sessions, setSessions] = useState(sampleSessions);
 
   const completedPercentage = useMemo(() => {
     const completed = sessions.filter((session) => session.completed).length;

@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
                     youtube_thumbnail: thumbnail,
                   };
                 } catch {
+                  console.warn(`YouTube lookup failed for query: ${exercise.youtube_query}`);
                   return exercise;
                 }
               }),

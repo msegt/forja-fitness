@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Message is required" }, { status: 400 });
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -18,10 +18,14 @@ export async function POST(request: NextRequest) {
   const reply = await chatWithForja(profileContext, message);
 
   if (user) {
-    await supabase.from("chat_messages").insert([
+    const { error } = await supabase.from("chat_messages").insert([
       { user_id: user.id, role: "user", content: message },
       { user_id: user.id, role: "assistant", content: reply },
     ]);
+
+    if (error) {
+      return NextResponse.json({ error: "Unable to store chat message" }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ reply });

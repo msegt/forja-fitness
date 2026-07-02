@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ChatBubble } from "@/components/ChatBubble";
 
-type Message = { role: "user" | "assistant"; content: string };
+type Message = { id: string; role: "user" | "assistant"; content: string };
 
 const quickActions = ["Swap this exercise", "I’m feeling tired today", "Make this week harder", "Explain this exercise"];
 
@@ -12,6 +12,7 @@ export default function ChatPage() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([
     {
+      id: crypto.randomUUID(),
       role: "assistant",
       content: "Hi, I’m Forja. Tell me how today’s training feels and I’ll help you adapt your plan.",
     },
@@ -23,7 +24,7 @@ export default function ChatPage() {
       return;
     }
 
-    const nextMessages: Message[] = [...messages, { role: "user", content: trimmed }];
+    const nextMessages: Message[] = [...messages, { id: crypto.randomUUID(), role: "user", content: trimmed }];
     setMessages(nextMessages);
     setMessage("");
 
@@ -34,7 +35,7 @@ export default function ChatPage() {
     });
 
     const data = (await response.json()) as { reply: string };
-    setMessages((current) => [...current, { role: "assistant", content: data.reply }]);
+    setMessages((current) => [...current, { id: crypto.randomUUID(), role: "assistant", content: data.reply }]);
   }
 
   function onSubmit(event: FormEvent) {
@@ -53,8 +54,8 @@ export default function ChatPage() {
         ))}
       </div>
       <section className="flex-1 space-y-3 overflow-y-auto rounded-xl border border-slate-800 bg-slate-950/40 p-4">
-        {messages.map((item, index) => (
-          <ChatBubble key={`${item.role}-${index}`} role={item.role} content={item.content} />
+        {messages.map((item) => (
+          <ChatBubble key={item.id} role={item.role} content={item.content} />
         ))}
       </section>
       <form onSubmit={onSubmit} className="flex gap-2">

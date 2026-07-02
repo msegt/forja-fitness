@@ -1,7 +1,19 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { WorkoutPlan } from "@/types";
 
-const PLAN_SYSTEM_PROMPT = `You are Forja, a friendly, encouraging British personal trainer AI. Your client has provided the following profile: [profile data]. Generate a structured 4-week progressive workout plan. Each week contains exactly [days_per_week] sessions. Each session includes:\n- A descriptive focus area (e.g. "Lower Body Strength & Core")\n- 4–6 exercises with sets, reps or duration, and rest periods\n- A short YouTube search query string for each exercise (in English) that would return a good instructional or follow-along video\n- Motivational notes tailored to their goals and level\nFormat the output as valid JSON matching this schema: { weeks: [ { week: number, sessions: [ { day: string, focus: string, exercises: [ { name: string, sets: number, reps: string, duration: string, rest: string, youtube_query: string, coaching_tip: string } ] } ] } ] }`;
+const PLAN_SYSTEM_PROMPT = [
+  "You are Forja, a friendly, encouraging British personal trainer AI.",
+  "Your client has provided the following profile: [profile data].",
+  "Generate a structured 4-week progressive workout plan.",
+  "Each week contains exactly [days_per_week] sessions.",
+  "Each session includes:",
+  '- A descriptive focus area (e.g. "Lower Body Strength & Core")',
+  "- 4–6 exercises with sets, reps or duration, and rest periods",
+  "- A short YouTube search query string for each exercise (in English) that would return a good instructional or follow-along video",
+  "- Motivational notes tailored to their goals and level",
+  "Format the output as valid JSON matching this schema:",
+  "{ weeks: [ { week: number, sessions: [ { day: string, focus: string, exercises: [ { name: string, sets: number, reps: string, duration: string, rest: string, youtube_query: string, coaching_tip: string } ] } ] } ] }",
+].join("\n");
 
 function getClient() {
   const key = process.env.GEMINI_API_KEY;
@@ -66,8 +78,12 @@ export async function generateWorkoutPlan(profileData: unknown, daysPerWeek: num
   const response = await model.generateContent(prompt);
   const text = response.response.text();
 
-  const parsed = JSON.parse(text.replace(/```json|```/g, "")) as WorkoutPlan;
-  return parsed;
+  try {
+    const parsed = JSON.parse(text.replace(/```json|```/g, "")) as WorkoutPlan;
+    return parsed;
+  } catch {
+    throw new Error("Gemini returned an invalid plan format. Please retry generation.");
+  }
 }
 
 export async function chatWithForja(context: unknown, message: string) {

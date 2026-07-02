@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -18,8 +19,10 @@ const goals = [
 const equipmentOptions = ["none", "resistance bands", "dumbbells", "kettlebell", "pull-up bar", "gym access", "other"];
 
 export function OnboardingWizard() {
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [planPreview, setPlanPreview] = useState<WorkoutPlan | null>(null);
   const [form, setForm] = useState({
     fullName: "",
@@ -48,6 +51,7 @@ export function OnboardingWizard() {
   async function handleGeneratePreview(event: FormEvent) {
     event.preventDefault();
     setIsLoading(true);
+    setErrorMessage("");
     try {
       const response = await fetch("/api/generate-plan", {
         method: "POST",
@@ -55,9 +59,15 @@ export function OnboardingWizard() {
         body: JSON.stringify(form),
       });
 
+      if (!response.ok) {
+        throw new Error("Unable to generate your plan right now. Please try again.");
+      }
+
       const data = (await response.json()) as { plan: WorkoutPlan };
       setPlanPreview(data.plan);
       setStep(9);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Something went wrong while generating your plan.");
     } finally {
       setIsLoading(false);
     }
@@ -136,7 +146,7 @@ export function OnboardingWizard() {
               ))}
             </div>
           ))}
-          <Button onClick={() => window.location.assign("/dashboard")}>Save and continue</Button>
+          <Button onClick={() => router.push("/dashboard")}>Save and continue</Button>
         </div>
       ) : null}
 
@@ -146,6 +156,7 @@ export function OnboardingWizard() {
           <Skeleton className="h-16 w-full" />
         </div>
       ) : null}
+      {errorMessage ? <p className="text-sm text-red-300">{errorMessage}</p> : null}
 
       {step < 9 ? (
         <div className="flex gap-2">
