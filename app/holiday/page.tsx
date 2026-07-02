@@ -30,7 +30,7 @@ export default function HolidayPage() {
           Where are you heading and how long will you be away? Do you have access to any equipment (hotel gym, resistance bands you’re packing, etc.)? How much time per day can you dedicate to exercise?
         </p>
         <form onSubmit={onSubmit} className="space-y-2">
-          <textarea className="min-h-28 w-full rounded-lg bg-slate-800 p-2 text-sm" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="I’m away for ten days with a hotel gym and 30 minutes most mornings." />
+          <textarea id="holiday-details" aria-label="Holiday details" className="min-h-28 w-full rounded-lg bg-slate-800 p-2 text-sm" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="I’m away for ten days with a hotel gym and 30 minutes most mornings." />
           <div className="flex gap-2">
             <Button type="submit">Generate holiday plan</Button>
             <Button type="button" variant="secondary" onClick={() => setHolidayModeActive(false)}>End holiday mode</Button>

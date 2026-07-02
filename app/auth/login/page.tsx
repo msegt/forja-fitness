@@ -24,9 +24,9 @@ export default function LoginPage() {
         <h1 className="text-2xl font-semibold">Log in</h1>
         <form onSubmit={onSubmit} className="space-y-3">
           <label htmlFor="login-email" className="block text-sm text-slate-300">Email</label>
-          <input id="login-email" className="w-full rounded-lg bg-slate-800 p-2 text-sm" placeholder="Email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+          <input id="login-email" required aria-required="true" className="w-full rounded-lg bg-slate-800 p-2 text-sm" placeholder="Email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
           <label htmlFor="login-password" className="block text-sm text-slate-300">Password</label>
-          <input id="login-password" className="w-full rounded-lg bg-slate-800 p-2 text-sm" placeholder="Password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+          <input id="login-password" required aria-required="true" className="w-full rounded-lg bg-slate-800 p-2 text-sm" placeholder="Password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
           <Button className="w-full" type="submit">Log in with email</Button>
         </form>
         <Button variant="secondary" className="w-full" onClick={() => router.push("/dashboard")}>Continue with Google</Button>

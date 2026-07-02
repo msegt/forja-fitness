@@ -59,7 +59,7 @@ export default function ChatPage() {
         ))}
       </section>
       <form onSubmit={onSubmit} className="flex gap-2">
-        <input className="flex-1 rounded-lg bg-slate-800 p-2 text-sm" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Ask Forja for guidance" />
+        <input id="chat-message" aria-label="Chat message" className="flex-1 rounded-lg bg-slate-800 p-2 text-sm" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Ask Forja for guidance" />
         <Button type="submit">Send</Button>
       </form>
     </main>
