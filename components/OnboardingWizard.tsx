@@ -60,7 +60,8 @@ export function OnboardingWizard() {
       });
 
       if (!response.ok) {
-        throw new Error("Unable to generate your plan right now. Please try again.");
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(payload.error ?? "Unable to generate your plan right now. Please try again.");
       }
 
       const data = (await response.json()) as { plan: WorkoutPlan };
@@ -88,7 +89,8 @@ export function OnboardingWizard() {
       });
 
       if (!response.ok) {
-        throw new Error("Unable to save your plan right now. Please try again.");
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(payload.error ?? "Unable to save your plan right now. Please try again.");
       }
 
       router.push("/dashboard");
@@ -111,10 +113,22 @@ export function OnboardingWizard() {
       {step === 1 ? <p className="text-sm text-slate-200">Welcome to Forja. We’ll shape a training programme that fits your life.</p> : null}
       {step === 2 ? (
         <div className="grid gap-3 sm:grid-cols-2">
-          <input aria-label="Full name" className="rounded-lg bg-slate-800 p-2 text-sm" placeholder="Full name" value={form.fullName} onChange={(event) => setForm((prev) => ({ ...prev, fullName: event.target.value }))} />
-          <input aria-label="Date of birth" className="rounded-lg bg-slate-800 p-2 text-sm" type="date" value={form.dateOfBirth} onChange={(event) => setForm((prev) => ({ ...prev, dateOfBirth: event.target.value }))} />
-          <input aria-label="Weight in kilograms" className="rounded-lg bg-slate-800 p-2 text-sm" type="number" placeholder="Weight (kg)" value={form.weightKg} onChange={(event) => setForm((prev) => ({ ...prev, weightKg: event.target.value }))} />
-          <input aria-label="Height in centimetres" className="rounded-lg bg-slate-800 p-2 text-sm" type="number" placeholder="Height (cm)" value={form.heightCm} onChange={(event) => setForm((prev) => ({ ...prev, heightCm: event.target.value }))} />
+          <label htmlFor="onboarding-full-name" className="space-y-1 text-sm text-slate-300">
+            Full name
+            <input id="onboarding-full-name" className="mt-1 w-full rounded-lg bg-slate-800 p-2 text-sm" placeholder="Full name" value={form.fullName} onChange={(event) => setForm((prev) => ({ ...prev, fullName: event.target.value }))} />
+          </label>
+          <label htmlFor="onboarding-date-of-birth" className="space-y-1 text-sm text-slate-300">
+            Date of birth
+            <input id="onboarding-date-of-birth" className="mt-1 w-full rounded-lg bg-slate-800 p-2 text-sm" type="date" value={form.dateOfBirth} onChange={(event) => setForm((prev) => ({ ...prev, dateOfBirth: event.target.value }))} />
+          </label>
+          <label htmlFor="onboarding-weight-kg" className="space-y-1 text-sm text-slate-300">
+            Weight (kg)
+            <input id="onboarding-weight-kg" className="mt-1 w-full rounded-lg bg-slate-800 p-2 text-sm" type="number" placeholder="Weight (kg)" value={form.weightKg} onChange={(event) => setForm((prev) => ({ ...prev, weightKg: event.target.value }))} />
+          </label>
+          <label htmlFor="onboarding-height-cm" className="space-y-1 text-sm text-slate-300">
+            Height (cm)
+            <input id="onboarding-height-cm" className="mt-1 w-full rounded-lg bg-slate-800 p-2 text-sm" type="number" placeholder="Height (cm)" value={form.heightCm} onChange={(event) => setForm((prev) => ({ ...prev, heightCm: event.target.value }))} />
+          </label>
         </div>
       ) : null}
       {step === 3 ? (

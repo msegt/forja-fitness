@@ -76,8 +76,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ plan: { weeks } });
   } catch (error) {
+    const detail = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { error: "Failed to generate plan", detail: error instanceof Error ? error.message : "Unknown error" },
+      { error: "Failed to generate plan", ...(process.env.NODE_ENV !== "production" ? { detail } : {}) },
       { status: 500 },
     );
   }

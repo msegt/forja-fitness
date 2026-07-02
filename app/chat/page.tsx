@@ -12,7 +12,7 @@ export default function ChatPage() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: crypto.randomUUID(),
+      id: "welcome-message",
       role: "assistant",
       content: "Hi, I’m Forja. Tell me how today’s training feels and I’ll help you adapt your plan.",
     },
@@ -24,7 +24,7 @@ export default function ChatPage() {
       return;
     }
 
-    const nextMessages: Message[] = [...messages, { id: crypto.randomUUID(), role: "user", content: trimmed }];
+    const nextMessages: Message[] = [...messages, { id: `user-${Date.now()}`, role: "user", content: trimmed }];
     setMessages(nextMessages);
     setMessage("");
 
@@ -35,7 +35,7 @@ export default function ChatPage() {
     });
 
     const data = (await response.json()) as { reply: string };
-    setMessages((current) => [...current, { id: crypto.randomUUID(), role: "assistant", content: data.reply }]);
+    setMessages((current) => [...current, { id: `assistant-${Date.now()}`, role: "assistant", content: data.reply }]);
   }
 
   function onSubmit(event: FormEvent) {
