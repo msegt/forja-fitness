@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/Card";
 export default function HolidayPage() {
   const [prompt, setPrompt] = useState("");
   const [response, setResponse] = useState("");
+  const [holidayModeActive, setHolidayModeActive] = useState(true);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -32,10 +33,11 @@ export default function HolidayPage() {
           <textarea className="min-h-28 w-full rounded-lg bg-slate-800 p-2 text-sm" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="I’m away for ten days with a hotel gym and 30 minutes most mornings." />
           <div className="flex gap-2">
             <Button type="submit">Generate holiday plan</Button>
-            <Button type="button" variant="secondary">End holiday mode</Button>
+            <Button type="button" variant="secondary" onClick={() => setHolidayModeActive(false)}>End holiday mode</Button>
           </div>
         </form>
         {response ? <p className="rounded-lg bg-slate-800 p-3 text-sm text-slate-200">{response}</p> : null}
+        {!holidayModeActive ? <p className="text-sm text-green-300">Holiday mode ended. Your regular training schedule is active again.</p> : null}
       </Card>
     </main>
   );

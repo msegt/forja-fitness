@@ -79,7 +79,7 @@ export async function generateWorkoutPlan(profileData: unknown, daysPerWeek: num
   const text = response.response.text();
 
   try {
-    const parsed = JSON.parse(text.replace(/```json|```/g, "")) as WorkoutPlan;
+    const parsed = JSON.parse(text.replace(/```(?:json)?\n?|\n?```/g, "")) as WorkoutPlan;
     return parsed;
   } catch {
     throw new Error("Gemini returned an invalid plan format. Please retry generation.");

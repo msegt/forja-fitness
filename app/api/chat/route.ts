@@ -15,7 +15,12 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const profileContext = { userId: user?.id ?? "anonymous" };
-  const reply = await chatWithForja(profileContext, message);
+  let reply = "";
+  try {
+    reply = await chatWithForja(profileContext, message);
+  } catch {
+    return NextResponse.json({ error: "Unable to generate AI response" }, { status: 502 });
+  }
 
   if (user) {
     const { error } = await supabase.from("chat_messages").insert([

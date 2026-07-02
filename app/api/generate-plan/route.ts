@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateWorkoutPlan } from "@/lib/gemini";
 import { searchYoutubeVideo } from "@/lib/youtube";
+import { createClient } from "@/lib/supabase/server";
+import type { WorkoutPlan } from "@/types";
 
 export async function POST(request: NextRequest) {
-  const profile = (await request.json()) as Record<string, unknown>;
+  const profile = (await request.json()) as Record<string, unknown> & { savePlan?: boolean; plan?: WorkoutPlan };
   const daysPerWeek = Number(profile.daysPerWeek ?? 3);
 
   try {
-    const plan = await generateWorkoutPlan(profile, daysPerWeek);
+    const plan = profile.savePlan && profile.plan ? profile.plan : await generateWorkoutPlan(profile, daysPerWeek);
 
     const weeks = await Promise.all(
       plan.weeks.map(async (week) => ({
@@ -25,7 +27,9 @@ export async function POST(request: NextRequest) {
                     youtube_thumbnail: thumbnail,
                   };
                 } catch {
-                  console.warn(`YouTube lookup failed for query: ${exercise.youtube_query}`);
+                  if (process.env.NODE_ENV !== "production") {
+                    console.warn(`YouTube lookup failed for query: ${exercise.youtube_query}`);
+                  }
                   return exercise;
                 }
               }),
@@ -34,6 +38,41 @@ export async function POST(request: NextRequest) {
         ),
       })),
     );
+
+    if (profile.savePlan) {
+      const supabase = await createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const firstWeek = weeks[0];
+        const { data: planRow } = await supabase
+          .from("workout_plans")
+          .insert({
+            user_id: user.id,
+            week_number: firstWeek?.week ?? 1,
+            days_per_week: daysPerWeek,
+            session_length_minutes: Number(profile.sessionLength ?? 30),
+            equipment: Array.isArray(profile.equipment) ? profile.equipment : [],
+            gemini_raw_plan: { weeks },
+          })
+          .select("id")
+          .single();
+
+        if (planRow?.id && firstWeek) {
+          await supabase.from("sessions").insert(
+            firstWeek.sessions.map((session) => ({
+              plan_id: planRow.id,
+              user_id: user.id,
+              day_label: session.day,
+              focus: session.focus,
+              exercises: session.exercises,
+            })),
+          );
+        }
+      }
+    }
 
     return NextResponse.json({ plan: { weeks } });
   } catch (error) {

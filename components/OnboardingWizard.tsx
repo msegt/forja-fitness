@@ -73,6 +73,32 @@ export function OnboardingWizard() {
     }
   }
 
+  async function handleSavePlan() {
+    if (!planPreview) {
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage("");
+    try {
+      const response = await fetch("/api/generate-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, plan: planPreview, savePlan: true }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Unable to save your plan right now. Please try again.");
+      }
+
+      router.push("/dashboard");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to save plan.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   const updateArray = (field: "goals" | "equipment", value: string) => {
     const current = form[field];
     const next = current.includes(value) ? current.filter((item) => item !== value) : [...current, value];
@@ -85,14 +111,14 @@ export function OnboardingWizard() {
       {step === 1 ? <p className="text-sm text-slate-200">Welcome to Forja. We’ll shape a training programme that fits your life.</p> : null}
       {step === 2 ? (
         <div className="grid gap-3 sm:grid-cols-2">
-          <input className="rounded-lg bg-slate-800 p-2 text-sm" placeholder="Full name" value={form.fullName} onChange={(event) => setForm((prev) => ({ ...prev, fullName: event.target.value }))} />
-          <input className="rounded-lg bg-slate-800 p-2 text-sm" type="date" value={form.dateOfBirth} onChange={(event) => setForm((prev) => ({ ...prev, dateOfBirth: event.target.value }))} />
-          <input className="rounded-lg bg-slate-800 p-2 text-sm" type="number" placeholder="Weight (kg)" value={form.weightKg} onChange={(event) => setForm((prev) => ({ ...prev, weightKg: event.target.value }))} />
-          <input className="rounded-lg bg-slate-800 p-2 text-sm" type="number" placeholder="Height (cm)" value={form.heightCm} onChange={(event) => setForm((prev) => ({ ...prev, heightCm: event.target.value }))} />
+          <input aria-label="Full name" className="rounded-lg bg-slate-800 p-2 text-sm" placeholder="Full name" value={form.fullName} onChange={(event) => setForm((prev) => ({ ...prev, fullName: event.target.value }))} />
+          <input aria-label="Date of birth" className="rounded-lg bg-slate-800 p-2 text-sm" type="date" value={form.dateOfBirth} onChange={(event) => setForm((prev) => ({ ...prev, dateOfBirth: event.target.value }))} />
+          <input aria-label="Weight in kilograms" className="rounded-lg bg-slate-800 p-2 text-sm" type="number" placeholder="Weight (kg)" value={form.weightKg} onChange={(event) => setForm((prev) => ({ ...prev, weightKg: event.target.value }))} />
+          <input aria-label="Height in centimetres" className="rounded-lg bg-slate-800 p-2 text-sm" type="number" placeholder="Height (cm)" value={form.heightCm} onChange={(event) => setForm((prev) => ({ ...prev, heightCm: event.target.value }))} />
         </div>
       ) : null}
       {step === 3 ? (
-        <select className="w-full rounded-lg bg-slate-800 p-2 text-sm" value={form.fitnessLevel} onChange={(event) => setForm((prev) => ({ ...prev, fitnessLevel: event.target.value }))}>
+        <select aria-label="Fitness level" className="w-full rounded-lg bg-slate-800 p-2 text-sm" value={form.fitnessLevel} onChange={(event) => setForm((prev) => ({ ...prev, fitnessLevel: event.target.value }))}>
           <option value="beginner">Beginner</option>
           <option value="intermediate">Intermediate</option>
           <option value="advanced">Advanced</option>
@@ -108,9 +134,9 @@ export function OnboardingWizard() {
           ))}
         </div>
       ) : null}
-      {step === 5 ? <input className="w-full rounded-lg bg-slate-800 p-2 text-sm" type="number" min={1} max={7} value={form.daysPerWeek} onChange={(event) => setForm((prev) => ({ ...prev, daysPerWeek: event.target.value }))} /> : null}
+      {step === 5 ? <input aria-label="Days per week available" className="w-full rounded-lg bg-slate-800 p-2 text-sm" type="number" min={1} max={7} value={form.daysPerWeek} onChange={(event) => setForm((prev) => ({ ...prev, daysPerWeek: event.target.value }))} /> : null}
       {step === 6 ? (
-        <select className="w-full rounded-lg bg-slate-800 p-2 text-sm" value={form.sessionLength} onChange={(event) => setForm((prev) => ({ ...prev, sessionLength: event.target.value }))}>
+        <select aria-label="Preferred session length" className="w-full rounded-lg bg-slate-800 p-2 text-sm" value={form.sessionLength} onChange={(event) => setForm((prev) => ({ ...prev, sessionLength: event.target.value }))}>
           <option value="15">15 minutes</option>
           <option value="30">30 minutes</option>
           <option value="45">45 minutes</option>
@@ -128,11 +154,11 @@ export function OnboardingWizard() {
             ))}
           </div>
           {form.equipment.includes("other") ? (
-            <input className="w-full rounded-lg bg-slate-800 p-2 text-sm" placeholder="Other equipment" value={form.equipmentOther} onChange={(event) => setForm((prev) => ({ ...prev, equipmentOther: event.target.value }))} />
+            <input aria-label="Other equipment" className="w-full rounded-lg bg-slate-800 p-2 text-sm" placeholder="Other equipment" value={form.equipmentOther} onChange={(event) => setForm((prev) => ({ ...prev, equipmentOther: event.target.value }))} />
           ) : null}
         </div>
       ) : null}
-      {step === 8 ? <textarea className="min-h-24 w-full rounded-lg bg-slate-800 p-2 text-sm" placeholder="Health notes or injuries (optional)" value={form.healthNotes} onChange={(event) => setForm((prev) => ({ ...prev, healthNotes: event.target.value }))} /> : null}
+      {step === 8 ? <textarea aria-label="Health notes or injuries" className="min-h-24 w-full rounded-lg bg-slate-800 p-2 text-sm" placeholder="Health notes or injuries (optional)" value={form.healthNotes} onChange={(event) => setForm((prev) => ({ ...prev, healthNotes: event.target.value }))} /> : null}
       {step === 9 ? (
         <div className="space-y-3">
           <h3 className="text-lg font-semibold text-slate-100">Your preview plan</h3>
@@ -146,7 +172,7 @@ export function OnboardingWizard() {
               ))}
             </div>
           ))}
-          <Button onClick={() => router.push("/dashboard")}>Save and continue</Button>
+          <Button onClick={handleSavePlan} disabled={isLoading}>Save and continue</Button>
         </div>
       ) : null}
 
