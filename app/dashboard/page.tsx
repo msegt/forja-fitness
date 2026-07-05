@@ -68,7 +68,7 @@ export default async function DashboardPage() {
   if (user) {
     const { data } = await supabase
       .from("sessions")
-      .select("id, day_label, focus, exercises, completed, workout_plan:workout_plans(session_length_minutes)")
+      .select("id, day_label, focus, exercises, completed, workout_plans(session_length_minutes)")
       .eq("user_id", user.id)
       .order("created_at", { ascending: true });
 
@@ -78,7 +78,7 @@ export default async function DashboardPage() {
       focus: session.focus ?? "Training",
       exercises: isSessionExercises(session.exercises) ? session.exercises : [],
       completed: Boolean(session.completed),
-      session_length_minutes: extractSessionLength(session.workout_plan),
+      session_length_minutes: extractSessionLength(session.workout_plans),
     }));
   }
 

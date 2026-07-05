@@ -12,9 +12,10 @@ const ESTIMATED_MINUTES_PER_EXERCISE = 6;
 const WORKOUT_DURATION_BUFFER_MINUTES = 15;
 
 export function WorkoutCard({ session, completeAction }: WorkoutCardProps) {
+  const sessionLengthMinutes = session.session_length_minutes;
   const configuredSessionLength =
-    typeof session.session_length_minutes === "number" && Number.isFinite(session.session_length_minutes)
-      ? session.session_length_minutes
+    typeof sessionLengthMinutes === "number" && Number.isFinite(sessionLengthMinutes)
+      ? sessionLengthMinutes
       : null;
   const estimatedMinMinutes = configuredSessionLength !== null
     ? configuredSessionLength
