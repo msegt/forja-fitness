@@ -13,5 +13,9 @@ export function getSessionCompletionErrorMessage(errorCode?: string | string[]):
     return null;
   }
 
-  return SESSION_COMPLETION_ERROR_MESSAGES[errorCode as SessionCompletionErrorCode] ?? null;
+  if (!(errorCode in SESSION_COMPLETION_ERROR_MESSAGES)) {
+    return null;
+  }
+
+  return SESSION_COMPLETION_ERROR_MESSAGES[errorCode as SessionCompletionErrorCode];
 }
