@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { posix as pathPosix } from "node:path";
 import { markOwnSessionComplete } from "@/lib/sessionCompletion";
 import { type SessionCompletionErrorCode } from "@/app/dashboard/completionErrors";
 import { isAllowedDashboardReturnPath, isSessionId } from "@/app/dashboard/sessionPath";
@@ -19,7 +20,8 @@ function getReturnPath(formData: FormData): string {
     return DASHBOARD_PATH;
   }
 
-  const normalizedReturnPath = new URL(returnPath, "http://localhost").pathname;
+  const pathOnly = returnPath.split(/[?#]/, 1)[0] ?? DASHBOARD_PATH;
+  const normalizedReturnPath = pathPosix.normalize(pathOnly);
 
   if (!isAllowedDashboardReturnPath(normalizedReturnPath)) {
     return DASHBOARD_PATH;
