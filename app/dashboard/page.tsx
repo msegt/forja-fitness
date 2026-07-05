@@ -20,7 +20,7 @@ function isSessionExercises(value: unknown): value is Session["exercises"] {
   );
 }
 
-function getSessionLengthMinutes(value: unknown): number | null {
+function getSessionLengthFromWorkoutPlan(value: unknown): number | null {
   const plan =
     Array.isArray(value) && value.length > 0
       ? value[0]
@@ -78,7 +78,7 @@ export default async function DashboardPage() {
       focus: session.focus ?? "Training",
       exercises: isSessionExercises(session.exercises) ? session.exercises : [],
       completed: Boolean(session.completed),
-      session_length_minutes: getSessionLengthMinutes(session.workout_plans),
+      session_length_minutes: getSessionLengthFromWorkoutPlan(session.workout_plans),
     }));
   }
 
