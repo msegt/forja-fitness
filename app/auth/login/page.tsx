@@ -25,21 +25,32 @@ export default function LoginPage() {
     setErrorMessage("");
     const supabase = createClient();
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setErrorMessage(error.message);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error || !data.user) {
+      setErrorMessage(error?.message ?? "Unable to sign in.");
       setIsSubmitting(false);
       return;
     }
 
-    router.push("/dashboard");
+    const { count, error: countError } = await supabase
+      .from("sessions")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", data.user.id);
+
+    if (countError) {
+      setErrorMessage("We couldn't verify your training plan. Please try again.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    router.push((count ?? 0) > 0 ? "/dashboard" : "/onboarding");
   }
 
   async function continueWithGoogle() {
     setIsSubmitting(true);
     setErrorMessage("");
     const supabase = createClient();
-    const redirectTo = new URL("/dashboard", window.location.origin).toString();
+    const redirectTo = new URL("/auth/callback", window.location.origin).toString();
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",

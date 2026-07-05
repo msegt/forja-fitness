@@ -45,7 +45,7 @@ export default function ChatPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-4 px-4 py-6">
-      <h1 className="text-3xl font-bold">AI personal trainer chat</h1>
+      <h1 className="text-3xl font-bold text-slate-100">AI personal trainer chat</h1>
       <div className="flex flex-wrap gap-2">
         {quickActions.map((action) => (
           <Button key={action} variant="secondary" onClick={() => void sendMessage(action)}>

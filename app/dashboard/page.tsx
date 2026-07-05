@@ -81,7 +81,7 @@ export default async function DashboardPage({
         </div>
         <div className="flex items-center gap-2">
           <Link href="/holiday"><Button variant="secondary">Holiday mode</Button></Link>
-          <Button>Generate next week</Button>
+          <Link href="/onboarding"><Button variant="secondary">Regenerate plan</Button></Link>
         </div>
       </header>
 
@@ -112,7 +112,15 @@ export default async function DashboardPage({
             </div>
           ))
         ) : (
-          <p className="text-sm text-slate-300">No sessions yet. Complete onboarding to generate your first plan.</p>
+          <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-5">
+            <p className="text-base font-medium text-slate-100">No sessions yet.</p>
+            <p className="mt-1 text-sm text-slate-300">
+              Answer a few quick questions and Forja will build your first four-week programme.
+            </p>
+            <div className="mt-4">
+              <Link href="/onboarding"><Button>Start onboarding</Button></Link>
+            </div>
+          </div>
         )}
       </section>
     </main>
