@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button";
 
 type WorkoutCardProps = {
   session: Session;
-  completeAction: (formData: FormData) => Promise<void>;
+  completeAction?: (formData: FormData) => Promise<void>;
 };
 
 const MIN_WORKOUT_DURATION_MINUTES = 15;
@@ -40,14 +40,14 @@ export function WorkoutCard({ session, completeAction }: WorkoutCardProps) {
         <Button variant="secondary" disabled>
           Completed
         </Button>
-      ) : (
+      ) : completeAction ? (
         <form action={completeAction}>
           <input type="hidden" name="sessionId" value={session.id} />
           <Button type="submit">
             Mark as complete
           </Button>
         </form>
-      )}
+      ) : null}
     </Card>
   );
 }

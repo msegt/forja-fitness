@@ -4,8 +4,7 @@ import { ProgressRing } from "@/components/ui/ProgressRing";
 import { Button } from "@/components/ui/Button";
 import type { Session } from "@/types";
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
-import { markOwnSessionComplete } from "@/lib/sessionCompletion";
+import { markSessionCompleteAction } from "@/app/dashboard/actions";
 
 function isSessionExercises(value: unknown): value is Session["exercises"] {
   return (
@@ -40,25 +39,6 @@ function extractSessionLength(value: unknown): number | null {
 }
 
 export default async function DashboardPage() {
-  async function markSessionComplete(formData: FormData) {
-    "use server";
-
-    const sessionId = formData.get("sessionId");
-
-    if (typeof sessionId !== "string" || !sessionId) {
-      return;
-    }
-
-    const completed = await markOwnSessionComplete(sessionId);
-
-    if (!completed) {
-      return;
-    }
-
-    revalidatePath("/dashboard");
-    revalidatePath(`/dashboard/session/${sessionId}`);
-  }
-
   const supabase = await createClient();
   const {
     data: { user },
@@ -110,7 +90,7 @@ export default async function DashboardPage() {
         {sessions.length > 0 ? (
           sessions.map((session) => (
             <div key={session.id} className="space-y-2">
-              <WorkoutCard session={session} completeAction={markSessionComplete} />
+              <WorkoutCard session={session} completeAction={markSessionCompleteAction} />
               <Link className="text-sm text-orange-300 underline" href={`/dashboard/session/${session.id}`}>
                 View session details
               </Link>
