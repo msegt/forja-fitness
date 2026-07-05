@@ -40,10 +40,14 @@ export function WorkoutCard({ session, completeAction }: WorkoutCardProps) {
         <Button variant="secondary" disabled>
           Completed
         </Button>
+      ) : !completeAction ? (
+        <Button disabled>
+          Mark as complete
+        </Button>
       ) : (
         <form action={completeAction}>
           <input type="hidden" name="sessionId" value={session.id} />
-          <Button type="submit" disabled={!completeAction}>
+          <Button type="submit">
             Mark as complete
           </Button>
         </form>

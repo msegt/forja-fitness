@@ -19,6 +19,19 @@ function isSessionExercises(value: unknown): value is Session["exercises"] {
   );
 }
 
+function getSessionLengthMinutes(value: unknown): number | null {
+  if (
+    value &&
+    typeof value === "object" &&
+    "session_length_minutes" in value &&
+    typeof value.session_length_minutes === "number"
+  ) {
+    return value.session_length_minutes;
+  }
+
+  return null;
+}
+
 export default async function DashboardPage() {
   async function markSessionComplete(formData: FormData) {
     "use server";
@@ -38,12 +51,16 @@ export default async function DashboardPage() {
       return;
     }
 
-    await supabase
+    const { error } = await supabase
       .from("sessions")
       .update({ completed: true, completed_at: new Date().toISOString() })
       .eq("id", sessionId)
       .eq("user_id", user.id)
       .eq("completed", false);
+
+    if (error) {
+      return;
+    }
 
     revalidatePath("/dashboard");
     revalidatePath(`/dashboard/session/${sessionId}`);
@@ -68,13 +85,7 @@ export default async function DashboardPage() {
       focus: session.focus ?? "Training",
       exercises: isSessionExercises(session.exercises) ? session.exercises : [],
       completed: Boolean(session.completed),
-      session_length_minutes:
-        session.workout_plans &&
-        typeof session.workout_plans === "object" &&
-        "session_length_minutes" in session.workout_plans &&
-        typeof session.workout_plans.session_length_minutes === "number"
-          ? session.workout_plans.session_length_minutes
-          : null,
+      session_length_minutes: getSessionLengthMinutes(session.workout_plans),
     }));
   }
 

@@ -32,12 +32,16 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
       return;
     }
 
-    await supabase
+    const { error } = await supabase
       .from("sessions")
       .update({ completed: true, completed_at: new Date().toISOString() })
       .eq("id", params.id)
       .eq("user_id", user.id)
       .eq("completed", false);
+
+    if (error) {
+      return;
+    }
 
     revalidatePath("/dashboard");
     revalidatePath(`/dashboard/session/${params.id}`);
