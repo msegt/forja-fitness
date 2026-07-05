@@ -7,21 +7,21 @@ export function ClearCompletionError() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const clearedErrorValue = useRef<string | null>(null);
+  const lastClearedErrorValue = useRef<string | null>(null);
 
   useEffect(() => {
     const errorValue = searchParams.get("error");
 
     if (!errorValue) {
-      clearedErrorValue.current = null;
+      lastClearedErrorValue.current = null;
       return;
     }
 
-    if (clearedErrorValue.current === errorValue) {
+    if (lastClearedErrorValue.current === errorValue) {
       return;
     }
 
-    clearedErrorValue.current = errorValue;
+    lastClearedErrorValue.current = errorValue;
     const params = new URLSearchParams(searchParams.toString());
     params.delete("error");
     const queryString = params.toString();

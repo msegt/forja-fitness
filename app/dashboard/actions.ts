@@ -15,18 +15,18 @@ function formatErrorQueryParam(code: SessionCompletionErrorCode) {
 
 function getReturnPath(formData: FormData): string {
   const returnPath = formData.get("returnPath");
-  const hasProtocolPrefix = typeof returnPath === "string" && /^[a-zA-Z][\w+.-]*:/.test(returnPath);
 
-  if (
-    typeof returnPath !== "string" ||
-    hasProtocolPrefix ||
-    !returnPath.startsWith("/") ||
-    returnPath.startsWith("//")
-  ) {
+  if (typeof returnPath !== "string") {
     return DASHBOARD_PATH;
   }
 
-  const pathOnly = returnPath.split(/[?#]/, 1)[0];
+  const hasProtocolPrefix = /^[a-zA-Z][\w+.-]*:/.test(returnPath);
+
+  if (hasProtocolPrefix || !returnPath.startsWith("/") || returnPath.startsWith("//")) {
+    return DASHBOARD_PATH;
+  }
+
+  const pathOnly = returnPath.split(/[?#]/)[0];
   const normalizedReturnPath = pathPosix.normalize(pathOnly);
 
   if (!isAllowedDashboardReturnPath(normalizedReturnPath)) {
