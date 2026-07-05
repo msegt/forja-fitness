@@ -21,14 +21,19 @@ function isSessionExercises(value: unknown): value is Session["exercises"] {
 }
 
 function getSessionLengthMinutes(value: unknown): number | null {
+  const plan =
+    Array.isArray(value) && value.length > 0
+      ? value[0]
+      : value;
+
   if (
-    value &&
-    typeof value === "object" &&
-    "session_length_minutes" in value &&
-    typeof value.session_length_minutes === "number" &&
-    Number.isFinite(value.session_length_minutes)
+    plan &&
+    typeof plan === "object" &&
+    "session_length_minutes" in plan &&
+    typeof plan.session_length_minutes === "number" &&
+    Number.isFinite(plan.session_length_minutes)
   ) {
-    return value.session_length_minutes;
+    return plan.session_length_minutes;
   }
 
   return null;

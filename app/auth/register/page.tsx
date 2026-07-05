@@ -45,11 +45,7 @@ export default function RegisterPage() {
     }
 
     if (!data.session) {
-      setInfoMessage(
-        data.user?.identities?.length === 0
-          ? "This email is already registered. Please log in instead."
-          : "Check your inbox to confirm your email before continuing.",
-      );
+      setInfoMessage("Check your inbox to confirm your email before continuing. If your email is already registered, please log in instead.");
       setIsSubmitting(false);
       return;
     }
