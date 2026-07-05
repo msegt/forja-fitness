@@ -4,6 +4,7 @@ import { ExerciseItem } from "@/components/ExerciseItem";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import type { Exercise } from "@/types";
+import { revalidatePath } from "next/cache";
 
 function isExercises(value: unknown): value is Exercise[] {
   return (
@@ -19,6 +20,29 @@ function isExercises(value: unknown): value is Exercise[] {
 }
 
 export default async function SessionDetailPage({ params }: { params: { id: string } }) {
+  async function markSessionComplete() {
+    "use server";
+
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return;
+    }
+
+    await supabase
+      .from("sessions")
+      .update({ completed: true, completed_at: new Date().toISOString() })
+      .eq("id", params.id)
+      .eq("user_id", user.id)
+      .eq("completed", false);
+
+    revalidatePath("/dashboard");
+    revalidatePath(`/dashboard/session/${params.id}`);
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -53,9 +77,11 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
           <ExerciseItem key={exercise.name} exercise={exercise} />
         ))}
       </section>
-      <Button disabled={Boolean(session.completed)}>
-        {session.completed ? "Completed" : "Mark session complete"}
-      </Button>
+      <form action={markSessionComplete}>
+        <Button type="submit" disabled={Boolean(session.completed)}>
+          {session.completed ? "Completed" : "Mark session complete"}
+        </Button>
+      </form>
     </main>
   );
 }

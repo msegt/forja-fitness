@@ -4,19 +4,25 @@ import { Button } from "@/components/ui/Button";
 
 type WorkoutCardProps = {
   session: Session;
-  onComplete?: (sessionId: string) => void;
+  completeAction?: (formData: FormData) => Promise<void>;
 };
 
 const MIN_WORKOUT_DURATION_MINUTES = 15;
 const ESTIMATED_MINUTES_PER_EXERCISE = 6;
 const WORKOUT_DURATION_BUFFER_MINUTES = 15;
 
-export function WorkoutCard({ session, onComplete }: WorkoutCardProps) {
-  const estimatedMinMinutes = Math.max(
-    MIN_WORKOUT_DURATION_MINUTES,
-    session.exercises.length * ESTIMATED_MINUTES_PER_EXERCISE,
-  );
-  const estimatedMaxMinutes = estimatedMinMinutes + WORKOUT_DURATION_BUFFER_MINUTES;
+export function WorkoutCard({ session, completeAction }: WorkoutCardProps) {
+  const configuredSessionLength =
+    typeof session.session_length_minutes === "number" && Number.isFinite(session.session_length_minutes)
+      ? session.session_length_minutes
+      : null;
+  const hasConfiguredSessionLength = configuredSessionLength !== null;
+  const estimatedMinMinutes = hasConfiguredSessionLength
+    ? configuredSessionLength
+    : Math.max(MIN_WORKOUT_DURATION_MINUTES, session.exercises.length * ESTIMATED_MINUTES_PER_EXERCISE);
+  const estimatedMaxMinutes = hasConfiguredSessionLength
+    ? undefined
+    : estimatedMinMinutes + WORKOUT_DURATION_BUFFER_MINUTES;
 
   return (
     <Card className="space-y-3">
@@ -27,14 +33,21 @@ export function WorkoutCard({ session, onComplete }: WorkoutCardProps) {
         </div>
         <span className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-300">{session.exercises.length} exercises</span>
       </div>
-      <p className="text-sm text-slate-300">Estimated length: {estimatedMinMinutes}–{estimatedMaxMinutes} minutes</p>
-      <Button
-        variant={session.completed ? "secondary" : "primary"}
-        onClick={() => onComplete?.(session.id)}
-        disabled={session.completed}
-      >
-        {session.completed ? "Completed" : "Mark as complete"}
-      </Button>
+      <p className="text-sm text-slate-300">
+        Estimated length: {estimatedMaxMinutes ? `${estimatedMinMinutes}–${estimatedMaxMinutes}` : estimatedMinMinutes} minutes
+      </p>
+      {session.completed ? (
+        <Button variant="secondary" disabled>
+          Completed
+        </Button>
+      ) : (
+        <form action={completeAction}>
+          <input type="hidden" name="sessionId" value={session.id} />
+          <Button type="submit" disabled={!completeAction}>
+            Mark as complete
+          </Button>
+        </form>
+      )}
     </Card>
   );
 }

@@ -29,6 +29,7 @@ export type Session = {
   focus: string;
   exercises: Exercise[];
   completed: boolean;
+  session_length_minutes?: number | null;
 };
 
 export type WorkoutWeek = {

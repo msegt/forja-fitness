@@ -4,6 +4,7 @@ import { ProgressRing } from "@/components/ui/ProgressRing";
 import { Button } from "@/components/ui/Button";
 import type { Session } from "@/types";
 import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 function isSessionExercises(value: unknown): value is Session["exercises"] {
   return (
@@ -19,6 +20,35 @@ function isSessionExercises(value: unknown): value is Session["exercises"] {
 }
 
 export default async function DashboardPage() {
+  async function markSessionComplete(formData: FormData) {
+    "use server";
+
+    const sessionId = formData.get("sessionId");
+
+    if (typeof sessionId !== "string" || !sessionId) {
+      return;
+    }
+
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return;
+    }
+
+    await supabase
+      .from("sessions")
+      .update({ completed: true, completed_at: new Date().toISOString() })
+      .eq("id", sessionId)
+      .eq("user_id", user.id)
+      .eq("completed", false);
+
+    revalidatePath("/dashboard");
+    revalidatePath(`/dashboard/session/${sessionId}`);
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -28,7 +58,7 @@ export default async function DashboardPage() {
   if (user) {
     const { data } = await supabase
       .from("sessions")
-      .select("id, day_label, focus, exercises, completed")
+      .select("id, day_label, focus, exercises, completed, workout_plans(session_length_minutes)")
       .eq("user_id", user.id)
       .order("created_at", { ascending: true });
 
@@ -38,6 +68,13 @@ export default async function DashboardPage() {
       focus: session.focus ?? "Training",
       exercises: isSessionExercises(session.exercises) ? session.exercises : [],
       completed: Boolean(session.completed),
+      session_length_minutes:
+        session.workout_plans &&
+        typeof session.workout_plans === "object" &&
+        "session_length_minutes" in session.workout_plans &&
+        typeof session.workout_plans.session_length_minutes === "number"
+          ? session.workout_plans.session_length_minutes
+          : null,
     }));
   }
 
@@ -69,7 +106,7 @@ export default async function DashboardPage() {
         {sessions.length > 0 ? (
           sessions.map((session) => (
             <div key={session.id} className="space-y-2">
-              <WorkoutCard session={session} />
+              <WorkoutCard session={session} completeAction={markSessionComplete} />
               <Link className="text-sm text-orange-300 underline" href={`/dashboard/session/${session.id}`}>
                 View session details
               </Link>

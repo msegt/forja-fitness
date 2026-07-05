@@ -14,6 +14,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [infoMessage, setInfoMessage] = useState("");
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -24,10 +25,11 @@ export default function RegisterPage() {
 
     setIsSubmitting(true);
     setErrorMessage("");
+    setInfoMessage("");
     const supabase = createClient();
     const emailRedirectTo = new URL("/onboarding", window.location.origin).toString();
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -42,12 +44,23 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!data.session) {
+      setInfoMessage(
+        data.user?.identities?.length === 0
+          ? "This email is already registered. Please log in instead."
+          : "Check your inbox to confirm your email before continuing.",
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
     router.push("/onboarding");
   }
 
   async function continueWithGoogle() {
     setIsSubmitting(true);
     setErrorMessage("");
+    setInfoMessage("");
     const supabase = createClient();
     const redirectTo = new URL("/onboarding", window.location.origin).toString();
 
@@ -77,6 +90,7 @@ export default function RegisterPage() {
         </form>
         <Button variant="secondary" className="w-full" onClick={continueWithGoogle} disabled={isSubmitting}>Continue with Google</Button>
         {errorMessage ? <p className="text-sm text-red-300">{errorMessage}</p> : null}
+        {infoMessage ? <p className="text-sm text-slate-300">{infoMessage}</p> : null}
         <p className="text-sm text-slate-300">
           Already have an account? <Link href="/auth/login" className="text-orange-300 underline">Log in</Link>
         </p>
