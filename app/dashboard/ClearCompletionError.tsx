@@ -11,12 +11,18 @@ export function ClearCompletionError() {
 
   useEffect(() => {
     const search = searchParams.toString();
+    const currentUrl = `${pathname}?${search}`;
 
-    if (!searchParams.has("error") || clearedSearch.current === search) {
+    if (!searchParams.has("error")) {
+      clearedSearch.current = null;
       return;
     }
 
-    clearedSearch.current = search;
+    if (clearedSearch.current === currentUrl) {
+      return;
+    }
+
+    clearedSearch.current = currentUrl;
     const params = new URLSearchParams(search);
     params.delete("error");
     const queryString = params.toString();

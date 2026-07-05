@@ -20,7 +20,12 @@ function getReturnPath(formData: FormData): string {
     return DASHBOARD_PATH;
   }
 
-  const pathOnly = returnPath.split(/[?#]/, 1)[0] ?? DASHBOARD_PATH;
+  const pathOnly = returnPath.split(/[?#]/, 1)[0];
+
+  if (!pathOnly) {
+    return DASHBOARD_PATH;
+  }
+
   const normalizedReturnPath = pathPosix.normalize(pathOnly);
 
   if (!isAllowedDashboardReturnPath(normalizedReturnPath)) {
