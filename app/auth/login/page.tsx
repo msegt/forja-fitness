@@ -9,7 +9,6 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,11 +39,11 @@ export default function LoginPage() {
     setIsSubmitting(true);
     setErrorMessage("");
     const supabase = createClient();
-    const redirectTo = siteUrl ? `${siteUrl}/dashboard` : undefined;
+    const redirectTo = new URL("/dashboard", window.location.origin).toString();
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: redirectTo ? { redirectTo } : undefined,
+      options: { redirectTo },
     });
 
     if (error) {

@@ -9,7 +9,6 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,14 +25,14 @@ export default function RegisterPage() {
     setIsSubmitting(true);
     setErrorMessage("");
     const supabase = createClient();
-    const emailRedirectTo = siteUrl ? `${siteUrl}/onboarding` : undefined;
+    const emailRedirectTo = new URL("/onboarding", window.location.origin).toString();
 
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: { full_name: fullName },
-        ...(emailRedirectTo ? { emailRedirectTo } : {}),
+        emailRedirectTo,
       },
     });
 
@@ -50,11 +49,11 @@ export default function RegisterPage() {
     setIsSubmitting(true);
     setErrorMessage("");
     const supabase = createClient();
-    const redirectTo = siteUrl ? `${siteUrl}/onboarding` : undefined;
+    const redirectTo = new URL("/onboarding", window.location.origin).toString();
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: redirectTo ? { redirectTo } : undefined,
+      options: { redirectTo },
     });
 
     if (error) {
