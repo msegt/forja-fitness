@@ -16,11 +16,10 @@ export function WorkoutCard({ session, completeAction }: WorkoutCardProps) {
     typeof session.session_length_minutes === "number" && Number.isFinite(session.session_length_minutes)
       ? session.session_length_minutes
       : null;
-  const hasConfiguredSessionLength = configuredSessionLength !== null;
-  const estimatedMinMinutes = hasConfiguredSessionLength
+  const estimatedMinMinutes = configuredSessionLength !== null
     ? configuredSessionLength
     : Math.max(MIN_WORKOUT_DURATION_MINUTES, session.exercises.length * ESTIMATED_MINUTES_PER_EXERCISE);
-  const estimatedMaxMinutes = hasConfiguredSessionLength
+  const estimatedMaxMinutes = configuredSessionLength !== null
     ? undefined
     : estimatedMinMinutes + WORKOUT_DURATION_BUFFER_MINUTES;
 
