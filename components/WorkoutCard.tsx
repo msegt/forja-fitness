@@ -12,8 +12,11 @@ const ESTIMATED_MINUTES_PER_EXERCISE = 6;
 const WORKOUT_DURATION_BUFFER_MINUTES = 15;
 
 export function WorkoutCard({ session, onComplete }: WorkoutCardProps) {
-  const estimatedMin = Math.max(MIN_WORKOUT_DURATION_MINUTES, session.exercises.length * ESTIMATED_MINUTES_PER_EXERCISE);
-  const estimatedMax = estimatedMin + WORKOUT_DURATION_BUFFER_MINUTES;
+  const estimatedMinMinutes = Math.max(
+    MIN_WORKOUT_DURATION_MINUTES,
+    session.exercises.length * ESTIMATED_MINUTES_PER_EXERCISE,
+  );
+  const estimatedMaxMinutes = estimatedMinMinutes + WORKOUT_DURATION_BUFFER_MINUTES;
 
   return (
     <Card className="space-y-3">
@@ -24,7 +27,7 @@ export function WorkoutCard({ session, onComplete }: WorkoutCardProps) {
         </div>
         <span className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-300">{session.exercises.length} exercises</span>
       </div>
-      <p className="text-sm text-slate-300">Estimated length: {estimatedMin}–{estimatedMax} minutes</p>
+      <p className="text-sm text-slate-300">Estimated length: {estimatedMinMinutes}–{estimatedMaxMinutes} minutes</p>
       <Button
         variant={session.completed ? "secondary" : "primary"}
         onClick={() => onComplete?.(session.id)}
