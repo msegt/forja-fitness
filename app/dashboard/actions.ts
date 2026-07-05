@@ -8,7 +8,7 @@ import { isAllowedDashboardReturnPath, isSessionId } from "@/app/dashboard/sessi
 
 const DASHBOARD_PATH = "/dashboard";
 
-function encodeError(code: SessionCompletionErrorCode) {
+function formatErrorQueryParam(code: SessionCompletionErrorCode) {
   return `error=${encodeURIComponent(code)}`;
 }
 
@@ -25,7 +25,7 @@ function getReturnPath(formData: FormData): string {
 function redirectWithError(returnPath: string, code: SessionCompletionErrorCode): never {
   // `redirect` throws to short-circuit action execution and navigate immediately.
   const separator = returnPath.includes("?") ? "&" : "?";
-  redirect(`${returnPath}${separator}${encodeError(code)}`);
+  redirect(`${returnPath}${separator}${formatErrorQueryParam(code)}`);
 }
 
 export async function markSessionCompleteAction(formData: FormData) {
