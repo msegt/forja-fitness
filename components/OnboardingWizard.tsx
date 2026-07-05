@@ -17,6 +17,7 @@ const goals = [
 ];
 
 const equipmentOptions = ["none", "resistance bands", "dumbbells", "kettlebell", "pull-up bar", "gym access", "other"];
+const totalSteps = 8;
 
 export function OnboardingWizard() {
   const router = useRouter();
@@ -67,6 +68,7 @@ export function OnboardingWizard() {
 
       const data = (await response.json()) as { plan: WorkoutPlan };
       setPlanPreview(data.plan);
+      setStep(totalSteps);
       setShowPreview(true);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Something went wrong while generating your plan.");
@@ -110,7 +112,7 @@ export function OnboardingWizard() {
 
   return (
     <Card className="mx-auto w-full max-w-2xl space-y-5">
-      {!showPreview ? <p className="text-xs uppercase tracking-wide text-slate-400">Step {step} of 8</p> : null}
+      {!showPreview ? <p className="text-xs uppercase tracking-wide text-slate-400">Step {step} of {totalSteps}</p> : null}
       {step === 1 ? <p className="text-sm text-slate-200">Welcome to Forja. We’ll shape a training programme that fits your life.</p> : null}
       {step === 2 ? (
         <div className="space-y-3">
@@ -227,7 +229,7 @@ export function OnboardingWizard() {
           <Button variant="ghost" onClick={() => setStep((value) => Math.max(1, value - 1))} disabled={step === 1}>
             Back
           </Button>
-          {step < 8 ? (
+          {step < totalSteps ? (
             <Button onClick={() => setStep((value) => value + 1)} disabled={!canGoNext}>
               Continue
             </Button>

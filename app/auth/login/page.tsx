@@ -34,11 +34,11 @@ export default function LoginPage() {
 
     const { count, error: countError } = await supabase
       .from("sessions")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("user_id", data.user.id);
 
     if (countError) {
-      setErrorMessage("We couldn't verify your training plan. Please try again.");
+      setErrorMessage("Unable to load your account status. Please try again.");
       setIsSubmitting(false);
       return;
     }

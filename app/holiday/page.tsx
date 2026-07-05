@@ -13,7 +13,7 @@ export default function HolidayPage() {
   const [isSavingHolidayMode, setIsSavingHolidayMode] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [loadingHolidayMode, setLoadingHolidayMode] = useState(true);
-  const [holidayModeActive, setHolidayModeActive] = useState(true);
+  const [holidayModeActive, setHolidayModeActive] = useState(false);
 
   useEffect(() => {
     async function loadHolidayMode() {
@@ -38,6 +38,7 @@ export default function HolidayPage() {
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
+    setErrorMessage("");
     const apiResponse = await fetch("/api/holiday-plan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -45,6 +46,25 @@ export default function HolidayPage() {
     });
     const data = (await apiResponse.json()) as { planSummary: string };
     setResponse(data.planSummary);
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return;
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      data: { ...user.user_metadata, holiday_mode_active: true },
+    });
+
+    if (error) {
+      setErrorMessage("Unable to update holiday mode right now.");
+      return;
+    }
+
+    setHolidayModeActive(true);
   }
 
   async function endHolidayMode() {
