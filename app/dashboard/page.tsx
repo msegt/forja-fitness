@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import type { Session } from "@/types";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { markOwnSessionComplete } from "@/lib/sessionCompletion";
 
 function isSessionExercises(value: unknown): value is Session["exercises"] {
   return (
@@ -24,7 +25,8 @@ function getSessionLengthMinutes(value: unknown): number | null {
     value &&
     typeof value === "object" &&
     "session_length_minutes" in value &&
-    typeof value.session_length_minutes === "number"
+    typeof value.session_length_minutes === "number" &&
+    Number.isFinite(value.session_length_minutes)
   ) {
     return value.session_length_minutes;
   }
@@ -42,23 +44,9 @@ export default async function DashboardPage() {
       return;
     }
 
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const completed = await markOwnSessionComplete(sessionId);
 
-    if (!user) {
-      return;
-    }
-
-    const { error } = await supabase
-      .from("sessions")
-      .update({ completed: true, completed_at: new Date().toISOString() })
-      .eq("id", sessionId)
-      .eq("user_id", user.id)
-      .eq("completed", false);
-
-    if (error) {
+    if (!completed) {
       return;
     }
 

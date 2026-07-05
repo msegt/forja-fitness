@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import type { Exercise } from "@/types";
 import { revalidatePath } from "next/cache";
+import { markOwnSessionComplete } from "@/lib/sessionCompletion";
 
 function isExercises(value: unknown): value is Exercise[] {
   return (
@@ -23,23 +24,9 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
   async function markSessionComplete() {
     "use server";
 
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const completed = await markOwnSessionComplete(params.id);
 
-    if (!user) {
-      return;
-    }
-
-    const { error } = await supabase
-      .from("sessions")
-      .update({ completed: true, completed_at: new Date().toISOString() })
-      .eq("id", params.id)
-      .eq("user_id", user.id)
-      .eq("completed", false);
-
-    if (error) {
+    if (!completed) {
       return;
     }
 
