@@ -61,13 +61,17 @@ export function OnboardingWizard() {
         body: JSON.stringify(form),
       });
 
+      const payload = (await response.json().catch(() => ({}))) as { plan?: WorkoutPlan; error?: string };
+
       if (!response.ok) {
-        const payload = (await response.json().catch(() => ({}))) as { error?: string };
         throw new Error(payload.error ?? "Unable to generate your plan right now. Please try again.");
       }
 
-      const data = (await response.json()) as { plan: WorkoutPlan };
-      setPlanPreview(data.plan);
+      if (!payload.plan) {
+        throw new Error("No plan was returned by the server. Please try again.");
+      }
+
+      setPlanPreview(payload.plan);
       setStep(totalSteps);
       setShowPreview(true);
     } catch (error) {
@@ -113,7 +117,7 @@ export function OnboardingWizard() {
   return (
     <Card className="mx-auto w-full max-w-2xl space-y-5">
       {!showPreview ? <p className="text-xs uppercase tracking-wide text-slate-400">Step {step} of {totalSteps}</p> : null}
-      {step === 1 ? <p className="text-sm text-slate-200">Welcome to Forja. We’ll shape a training programme that fits your life.</p> : null}
+      {step === 1 ? <p className="text-sm text-slate-200">Welcome to Forja. We&apos;ll shape a training programme that fits your life.</p> : null}
       {step === 2 ? (
         <div className="space-y-3">
           <p className="text-base font-medium text-slate-100">Tell us about yourself</p>
@@ -222,7 +226,11 @@ export function OnboardingWizard() {
           <Skeleton className="h-16 w-full" />
         </div>
       ) : null}
-      {errorMessage ? <p className="text-sm text-red-300">{errorMessage}</p> : null}
+      {errorMessage ? (
+        <div className="rounded-md border border-rose-500/40 bg-rose-500/10 px-4 py-3">
+          <p className="text-sm text-rose-200">{errorMessage}</p>
+        </div>
+      ) : null}
 
       {!showPreview ? (
         <div className="flex gap-2">

@@ -30,9 +30,7 @@ export async function POST(request: NextRequest) {
                     youtube_thumbnail: thumbnail,
                   };
                 } catch {
-                  if (process.env.NODE_ENV !== "production") {
-                    console.warn(`YouTube lookup failed for query: ${exercise.youtube_query}`);
-                  }
+                  console.warn(`YouTube lookup failed for query: ${exercise.youtube_query}`);
                   return exercise;
                 }
               }),
@@ -79,9 +77,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ plan: { weeks } });
   } catch (error) {
-    const detail = error instanceof Error ? error.message : "Unknown error";
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error("[generate-plan] error:", detail);
     return NextResponse.json(
-      { error: "Failed to generate plan", ...(process.env.NODE_ENV !== "production" ? { detail } : {}) },
+      { error: `Failed to generate plan: ${detail}` },
       { status: 500 },
     );
   }
