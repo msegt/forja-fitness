@@ -7,10 +7,10 @@ import { Card } from "@/components/ui/Card";
 export function ExerciseItem({ exercise }: { exercise: Exercise }) {
   const [done, setDone] = useState(false);
   const details = [
-    exercise.sets ? `${exercise.sets} sets` : "",
-    exercise.reps ?? "",
-    exercise.duration ?? "",
-    exercise.rest ? `Rest ${exercise.rest}` : "",
+    exercise.sets ? `${exercise.sets} sets` : null,
+    exercise.reps ? `${exercise.reps}` : null,
+    exercise.duration ? `${exercise.duration}` : null,
+    exercise.rest ? `Rest ${exercise.rest}` : null,
   ].filter(Boolean);
 
   return (

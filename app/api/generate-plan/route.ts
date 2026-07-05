@@ -4,10 +4,12 @@ import { searchYoutubeVideo } from "@/lib/youtube";
 import { createClient } from "@/lib/supabase/server";
 import type { WorkoutPlan } from "@/types";
 
+const DEFAULT_SESSION_LENGTH_MINUTES = 30;
+
 export async function POST(request: NextRequest) {
   const profile = (await request.json()) as Record<string, unknown> & { savePlan?: boolean; plan?: WorkoutPlan };
   const daysPerWeek = Number(profile.daysPerWeek ?? 3);
-  const sessionLengthMinutes = Number(profile.sessionLength ?? 30);
+  const sessionLengthMinutes = Number(profile.sessionLength ?? DEFAULT_SESSION_LENGTH_MINUTES);
 
   try {
     const plan = profile.savePlan && profile.plan ? profile.plan : await generateWorkoutPlan(profile, daysPerWeek);
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
             user_id: user.id,
             week_number: firstWeek?.week ?? 1,
             days_per_week: daysPerWeek,
-            session_length_minutes: Number.isFinite(sessionLengthMinutes) ? sessionLengthMinutes : 30,
+            session_length_minutes: Number.isFinite(sessionLengthMinutes) ? sessionLengthMinutes : DEFAULT_SESSION_LENGTH_MINUTES,
             equipment: Array.isArray(profile.equipment) ? profile.equipment : [],
             gemini_raw_plan: { weeks },
           })
