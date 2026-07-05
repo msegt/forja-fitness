@@ -20,7 +20,7 @@ function isSessionExercises(value: unknown): value is Session["exercises"] {
   );
 }
 
-function getSessionLengthFromWorkoutPlan(value: unknown): number | null {
+function extractSessionLengthFromWorkoutPlansResult(value: unknown): number | null {
   const plan =
     Array.isArray(value) && value.length > 0
       ? value[0]
@@ -68,7 +68,7 @@ export default async function DashboardPage() {
   if (user) {
     const { data } = await supabase
       .from("sessions")
-      .select("id, day_label, focus, exercises, completed, workout_plans(session_length_minutes)")
+      .select("id, day_label, focus, exercises, completed, workout_plan:workout_plans(session_length_minutes)")
       .eq("user_id", user.id)
       .order("created_at", { ascending: true });
 
@@ -78,7 +78,7 @@ export default async function DashboardPage() {
       focus: session.focus ?? "Training",
       exercises: isSessionExercises(session.exercises) ? session.exercises : [],
       completed: Boolean(session.completed),
-      session_length_minutes: getSessionLengthFromWorkoutPlan(session.workout_plans),
+      session_length_minutes: extractSessionLengthFromWorkoutPlansResult(session.workout_plan),
     }));
   }
 
