@@ -17,10 +17,12 @@ const goals = [
 ];
 
 const equipmentOptions = ["none", "resistance bands", "dumbbells", "kettlebell", "pull-up bar", "gym access", "other"];
+const totalSteps = 8;
 
 export function OnboardingWizard() {
   const router = useRouter();
   const [step, setStep] = useState(1);
+  const [showPreview, setShowPreview] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [planPreview, setPlanPreview] = useState<WorkoutPlan | null>(null);
@@ -66,7 +68,8 @@ export function OnboardingWizard() {
 
       const data = (await response.json()) as { plan: WorkoutPlan };
       setPlanPreview(data.plan);
-      setStep(9);
+      setStep(totalSteps);
+      setShowPreview(true);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Something went wrong while generating your plan.");
     } finally {
@@ -109,10 +112,12 @@ export function OnboardingWizard() {
 
   return (
     <Card className="mx-auto w-full max-w-2xl space-y-5">
-      <p className="text-xs uppercase tracking-wide text-slate-400">Step {step} of 9</p>
+      {!showPreview ? <p className="text-xs uppercase tracking-wide text-slate-400">Step {step} of {totalSteps}</p> : null}
       {step === 1 ? <p className="text-sm text-slate-200">Welcome to Forja. We’ll shape a training programme that fits your life.</p> : null}
       {step === 2 ? (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-3">
+          <p className="text-base font-medium text-slate-100">Tell us about yourself</p>
+          <div className="grid gap-3 sm:grid-cols-2">
           <label htmlFor="onboarding-full-name" className="space-y-1 text-sm text-slate-300">
             Full name
             <input id="onboarding-full-name" required aria-required="true" className="mt-1 w-full rounded-lg bg-slate-800 p-2 text-sm" placeholder="Full name" value={form.fullName} onChange={(event) => setForm((prev) => ({ ...prev, fullName: event.target.value }))} />
@@ -129,40 +134,56 @@ export function OnboardingWizard() {
             Height (cm)
             <input id="onboarding-height-cm" required aria-required="true" className="mt-1 w-full rounded-lg bg-slate-800 p-2 text-sm" type="number" placeholder="Height (cm)" value={form.heightCm} onChange={(event) => setForm((prev) => ({ ...prev, heightCm: event.target.value }))} />
           </label>
+          </div>
         </div>
       ) : null}
       {step === 3 ? (
-        <select aria-label="Fitness level" className="w-full rounded-lg bg-slate-800 p-2 text-sm" value={form.fitnessLevel} onChange={(event) => setForm((prev) => ({ ...prev, fitnessLevel: event.target.value }))}>
-          <option value="beginner">Beginner</option>
-          <option value="intermediate">Intermediate</option>
-          <option value="advanced">Advanced</option>
-        </select>
-      ) : null}
-      {step === 4 ? (
-        <div className="grid gap-2 sm:grid-cols-2">
-          {goals.map((goal) => (
-            <label key={goal} className="flex items-center gap-2 text-sm text-slate-200">
-              <input type="checkbox" checked={form.goals.includes(goal)} onChange={() => updateArray("goals", goal)} />
-              {goal}
-            </label>
-          ))}
+        <div className="space-y-3">
+          <p className="text-base font-medium text-slate-100">What&apos;s your current fitness level?</p>
+          <select aria-label="Fitness level" className="w-full rounded-lg bg-slate-800 p-2 text-sm" value={form.fitnessLevel} onChange={(event) => setForm((prev) => ({ ...prev, fitnessLevel: event.target.value }))}>
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced</option>
+          </select>
         </div>
       ) : null}
-      {step === 5 ? <input aria-label="Days per week available" className="w-full rounded-lg bg-slate-800 p-2 text-sm" type="number" min={1} max={7} value={form.daysPerWeek} onChange={(event) => setForm((prev) => ({ ...prev, daysPerWeek: event.target.value }))} /> : null}
+      {step === 4 ? (
+        <div className="space-y-3">
+          <p className="text-base font-medium text-slate-100">What are your goals? (pick all that apply)</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {goals.map((goal) => (
+              <label key={goal} className="flex items-center gap-2 text-sm text-slate-200">
+                <input className="h-4 w-4 cursor-pointer accent-orange-400" type="checkbox" checked={form.goals.includes(goal)} onChange={() => updateArray("goals", goal)} />
+                {goal}
+              </label>
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {step === 5 ? (
+        <div className="space-y-3">
+          <p className="text-base font-medium text-slate-100">How many days per week can you train?</p>
+          <input aria-label="Days per week available" className="w-full rounded-lg bg-slate-800 p-2 text-sm" type="number" min={1} max={7} value={form.daysPerWeek} onChange={(event) => setForm((prev) => ({ ...prev, daysPerWeek: event.target.value }))} />
+        </div>
+      ) : null}
       {step === 6 ? (
-        <select aria-label="Preferred session length" className="w-full rounded-lg bg-slate-800 p-2 text-sm" value={form.sessionLength} onChange={(event) => setForm((prev) => ({ ...prev, sessionLength: event.target.value }))}>
-          <option value="15">15 minutes</option>
-          <option value="30">30 minutes</option>
-          <option value="45">45 minutes</option>
-          <option value="60">60+ minutes</option>
-        </select>
+        <div className="space-y-3">
+          <p className="text-base font-medium text-slate-100">How long are your sessions?</p>
+          <select aria-label="Preferred session length" className="w-full rounded-lg bg-slate-800 p-2 text-sm" value={form.sessionLength} onChange={(event) => setForm((prev) => ({ ...prev, sessionLength: event.target.value }))}>
+            <option value="15">15 minutes</option>
+            <option value="30">30 minutes</option>
+            <option value="45">45 minutes</option>
+            <option value="60">60+ minutes</option>
+          </select>
+        </div>
       ) : null}
       {step === 7 ? (
         <div className="space-y-3">
+          <p className="text-base font-medium text-slate-100">What equipment do you have access to?</p>
           <div className="grid gap-2 sm:grid-cols-2">
             {equipmentOptions.map((item) => (
               <label key={item} className="flex items-center gap-2 text-sm text-slate-200">
-                <input type="checkbox" checked={form.equipment.includes(item)} onChange={() => updateArray("equipment", item)} />
+                <input className="h-4 w-4 cursor-pointer accent-orange-400" type="checkbox" checked={form.equipment.includes(item)} onChange={() => updateArray("equipment", item)} />
                 {item}
               </label>
             ))}
@@ -172,8 +193,13 @@ export function OnboardingWizard() {
           ) : null}
         </div>
       ) : null}
-      {step === 8 ? <textarea aria-label="Health notes or injuries" className="min-h-24 w-full rounded-lg bg-slate-800 p-2 text-sm" placeholder="Health notes or injuries (optional)" value={form.healthNotes} onChange={(event) => setForm((prev) => ({ ...prev, healthNotes: event.target.value }))} /> : null}
-      {step === 9 ? (
+      {step === 8 ? (
+        <div className="space-y-3">
+          <p className="text-base font-medium text-slate-100">Any health notes or injuries we should know about? (optional)</p>
+          <textarea aria-label="Health notes or injuries" className="min-h-24 w-full rounded-lg bg-slate-800 p-2 text-sm" placeholder="Health notes or injuries (optional)" value={form.healthNotes} onChange={(event) => setForm((prev) => ({ ...prev, healthNotes: event.target.value }))} />
+        </div>
+      ) : null}
+      {showPreview ? (
         <div className="space-y-3">
           <h3 className="text-lg font-semibold text-slate-100">Your preview plan</h3>
           {planPreview?.weeks?.map((week) => (
@@ -198,12 +224,12 @@ export function OnboardingWizard() {
       ) : null}
       {errorMessage ? <p className="text-sm text-red-300">{errorMessage}</p> : null}
 
-      {step < 9 ? (
+      {!showPreview ? (
         <div className="flex gap-2">
           <Button variant="ghost" onClick={() => setStep((value) => Math.max(1, value - 1))} disabled={step === 1}>
             Back
           </Button>
-          {step < 8 ? (
+          {step < totalSteps ? (
             <Button onClick={() => setStep((value) => value + 1)} disabled={!canGoNext}>
               Continue
             </Button>
