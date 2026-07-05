@@ -15,17 +15,18 @@ function formatErrorQueryParam(code: SessionCompletionErrorCode) {
 
 function getReturnPath(formData: FormData): string {
   const returnPath = formData.get("returnPath");
+  const hasProtocolPrefix = typeof returnPath === "string" && /^[a-zA-Z][\w+.-]*:/.test(returnPath);
 
-  if (typeof returnPath !== "string" || !returnPath.startsWith("/") || returnPath.startsWith("//")) {
+  if (
+    typeof returnPath !== "string" ||
+    hasProtocolPrefix ||
+    !returnPath.startsWith("/") ||
+    returnPath.startsWith("//")
+  ) {
     return DASHBOARD_PATH;
   }
 
   const pathOnly = returnPath.split(/[?#]/, 1)[0];
-
-  if (!pathOnly) {
-    return DASHBOARD_PATH;
-  }
-
   const normalizedReturnPath = pathPosix.normalize(pathOnly);
 
   if (!isAllowedDashboardReturnPath(normalizedReturnPath)) {

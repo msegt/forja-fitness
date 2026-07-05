@@ -7,23 +7,22 @@ export function ClearCompletionError() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const clearedSearch = useRef<string | null>(null);
+  const clearedErrorValue = useRef<string | null>(null);
 
   useEffect(() => {
-    const search = searchParams.toString();
-    const currentUrl = `${pathname}?${search}`;
+    const errorValue = searchParams.get("error");
 
-    if (!searchParams.has("error")) {
-      clearedSearch.current = null;
+    if (!errorValue) {
+      clearedErrorValue.current = null;
       return;
     }
 
-    if (clearedSearch.current === currentUrl) {
+    if (clearedErrorValue.current === errorValue) {
       return;
     }
 
-    clearedSearch.current = currentUrl;
-    const params = new URLSearchParams(search);
+    clearedErrorValue.current = errorValue;
+    const params = new URLSearchParams(searchParams.toString());
     params.delete("error");
     const queryString = params.toString();
     const nextUrl = queryString ? `${pathname}?${queryString}` : pathname;
