@@ -15,7 +15,7 @@ function formatErrorQueryParam(code: SessionCompletionErrorCode) {
 function getReturnPath(formData: FormData): string {
   const returnPath = formData.get("returnPath");
 
-  if (typeof returnPath !== "string") {
+  if (typeof returnPath !== "string" || !returnPath.startsWith("/") || returnPath.startsWith("//")) {
     return DASHBOARD_PATH;
   }
 
