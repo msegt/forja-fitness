@@ -8,6 +8,9 @@ type WorkoutCardProps = {
 };
 
 export function WorkoutCard({ session, onComplete }: WorkoutCardProps) {
+  const estimatedMin = Math.max(15, session.exercises.length * 6);
+  const estimatedMax = estimatedMin + 15;
+
   return (
     <Card className="space-y-3">
       <div className="flex items-start justify-between gap-2">
@@ -17,7 +20,7 @@ export function WorkoutCard({ session, onComplete }: WorkoutCardProps) {
         </div>
         <span className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-300">{session.exercises.length} exercises</span>
       </div>
-      <p className="text-sm text-slate-300">Estimated length: 30–45 minutes</p>
+      <p className="text-sm text-slate-300">Estimated length: {estimatedMin}–{estimatedMax} minutes</p>
       <Button
         variant={session.completed ? "secondary" : "primary"}
         onClick={() => onComplete?.(session.id)}

@@ -6,6 +6,12 @@ import { Card } from "@/components/ui/Card";
 
 export function ExerciseItem({ exercise }: { exercise: Exercise }) {
   const [done, setDone] = useState(false);
+  const details = [
+    exercise.sets ? `${exercise.sets} sets` : "",
+    exercise.reps ?? "",
+    exercise.duration ?? "",
+    exercise.rest ? `Rest ${exercise.rest}` : "",
+  ].filter(Boolean);
 
   return (
     <Card className="space-y-2">
@@ -16,9 +22,7 @@ export function ExerciseItem({ exercise }: { exercise: Exercise }) {
           Done
         </label>
       </div>
-      <p className="text-sm text-slate-300">
-        {exercise.sets ? `${exercise.sets} sets` : ""} {exercise.reps ? `• ${exercise.reps}` : ""} {exercise.duration ? `• ${exercise.duration}` : ""} {exercise.rest ? `• Rest ${exercise.rest}` : ""}
-      </p>
+      {details.length > 0 ? <p className="text-sm text-slate-300">{details.join(" • ")}</p> : null}
       {exercise.coaching_tip ? <p className="text-sm italic text-orange-300">{exercise.coaching_tip}</p> : null}
       {exercise.youtube_url ? (
         <a href={exercise.youtube_url} target="_blank" rel="noreferrer" className="text-sm text-orange-400 underline">

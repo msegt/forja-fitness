@@ -5,17 +5,60 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { createClient } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  function onSubmit(event: FormEvent) {
+  async function onSubmit(event: FormEvent) {
     event.preventDefault();
-    if (fullName && email && password) {
-      router.push("/onboarding");
+
+    if (!fullName || !email || !password) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage("");
+    const supabase = createClient();
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: fullName },
+        emailRedirectTo: `${window.location.origin}/onboarding`,
+      },
+    });
+
+    if (error) {
+      setErrorMessage(error.message);
+      setIsSubmitting(false);
+      return;
+    }
+
+    router.push("/onboarding");
+  }
+
+  async function continueWithGoogle() {
+    setIsSubmitting(true);
+    setErrorMessage("");
+    const supabase = createClient();
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/onboarding`,
+      },
+    });
+
+    if (error) {
+      setErrorMessage(error.message);
+      setIsSubmitting(false);
     }
   }
 
@@ -30,9 +73,10 @@ export default function RegisterPage() {
           <input id="register-email" required aria-required="true" className="w-full rounded-lg bg-slate-800 p-2 text-sm" placeholder="Email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
           <label htmlFor="register-password" className="block text-sm text-slate-300">Password</label>
           <input id="register-password" required aria-required="true" className="w-full rounded-lg bg-slate-800 p-2 text-sm" placeholder="Password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
-          <Button className="w-full" type="submit">Register with email</Button>
+          <Button className="w-full" type="submit" disabled={isSubmitting}>Register with email</Button>
         </form>
-        <Button variant="secondary" className="w-full" onClick={() => router.push("/onboarding")}>Continue with Google</Button>
+        <Button variant="secondary" className="w-full" onClick={continueWithGoogle} disabled={isSubmitting}>Continue with Google</Button>
+        {errorMessage ? <p className="text-sm text-red-300">{errorMessage}</p> : null}
         <p className="text-sm text-slate-300">
           Already have an account? <Link href="/auth/login" className="text-orange-300 underline">Log in</Link>
         </p>
