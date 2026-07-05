@@ -19,13 +19,13 @@ function getReturnPath(formData: FormData): string {
     return DASHBOARD_PATH;
   }
 
-  const normalisedReturnPath = new URL(returnPath, "http://localhost").pathname;
+  const normalizedReturnPath = new URL(returnPath, "http://localhost").pathname;
 
-  if (!isAllowedDashboardReturnPath(normalisedReturnPath)) {
+  if (!isAllowedDashboardReturnPath(normalizedReturnPath)) {
     return DASHBOARD_PATH;
   }
 
-  return normalisedReturnPath;
+  return normalizedReturnPath;
 }
 
 function redirectWithError(returnPath: string, code: SessionCompletionErrorCode): never {
