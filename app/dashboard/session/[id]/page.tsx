@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import type { Exercise } from "@/types";
 import { markSessionCompleteAction } from "@/app/dashboard/actions";
 import { getSessionCompletionErrorMessage } from "@/app/dashboard/completionErrors";
+import { ClearCompletionError } from "@/app/dashboard/ClearCompletionError";
 
 function isExercises(value: unknown): value is Exercise[] {
   return (
@@ -63,9 +64,12 @@ export default async function SessionDetailPage({
         ))}
       </section>
       {completionError ? (
-        <p className="rounded-md border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-          {completionError}
-        </p>
+        <>
+          <ClearCompletionError />
+          <p className="rounded-md border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+            {completionError}
+          </p>
+        </>
       ) : null}
       <form action={markSessionCompleteAction}>
         <input type="hidden" name="sessionId" value={params.id} />

@@ -8,14 +8,18 @@ export const SESSION_COMPLETION_ERROR_MESSAGES = {
 
 export type SessionCompletionErrorCode = keyof typeof SESSION_COMPLETION_ERROR_MESSAGES;
 
+function isSessionCompletionErrorCode(value: string): value is SessionCompletionErrorCode {
+  return Object.hasOwn(SESSION_COMPLETION_ERROR_MESSAGES, value);
+}
+
 export function getSessionCompletionErrorMessage(errorCode?: string | string[]): string | null {
   if (typeof errorCode !== "string") {
     return null;
   }
 
-  if (!(errorCode in SESSION_COMPLETION_ERROR_MESSAGES)) {
+  if (!isSessionCompletionErrorCode(errorCode)) {
     return null;
   }
 
-  return SESSION_COMPLETION_ERROR_MESSAGES[errorCode as SessionCompletionErrorCode];
+  return SESSION_COMPLETION_ERROR_MESSAGES[errorCode];
 }

@@ -6,6 +6,7 @@ import type { Session } from "@/types";
 import { createClient } from "@/lib/supabase/server";
 import { markSessionCompleteAction } from "@/app/dashboard/actions";
 import { getSessionCompletionErrorMessage } from "@/app/dashboard/completionErrors";
+import { ClearCompletionError } from "@/app/dashboard/ClearCompletionError";
 
 function isSessionExercises(value: unknown): value is Session["exercises"] {
   return (
@@ -92,9 +93,12 @@ export default async function DashboardPage({
         <ProgressRing value={completedPercentage} />
       </section>
       {completionError ? (
-        <p className="rounded-md border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-          {completionError}
-        </p>
+        <>
+          <ClearCompletionError />
+          <p className="rounded-md border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+            {completionError}
+          </p>
+        </>
       ) : null}
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

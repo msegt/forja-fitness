@@ -15,11 +15,17 @@ function formatErrorQueryParam(code: SessionCompletionErrorCode) {
 function getReturnPath(formData: FormData): string {
   const returnPath = formData.get("returnPath");
 
-  if (typeof returnPath !== "string" || !isAllowedDashboardReturnPath(returnPath)) {
+  if (typeof returnPath !== "string") {
     return DASHBOARD_PATH;
   }
 
-  return returnPath;
+  const normalisedReturnPath = new URL(returnPath, "http://localhost").pathname;
+
+  if (!isAllowedDashboardReturnPath(normalisedReturnPath)) {
+    return DASHBOARD_PATH;
+  }
+
+  return normalisedReturnPath;
 }
 
 function redirectWithError(returnPath: string, code: SessionCompletionErrorCode): never {
