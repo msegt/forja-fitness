@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import type { Session } from "@/types";
 import { createClient } from "@/lib/supabase/server";
 import { markSessionCompleteAction } from "@/app/dashboard/actions";
+import { getSessionCompletionErrorMessage } from "@/app/dashboard/completionErrors";
 
 function isSessionExercises(value: unknown): value is Session["exercises"] {
   return (
@@ -38,7 +39,12 @@ function extractSessionLength(value: unknown): number | null {
   return null;
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: { error?: string | string[] };
+}) {
+  const completionError = getSessionCompletionErrorMessage(searchParams?.error);
   const supabase = await createClient();
   const {
     data: { user },
@@ -85,12 +91,17 @@ export default async function DashboardPage() {
         </div>
         <ProgressRing value={completedPercentage} />
       </section>
+      {completionError ? (
+        <p className="rounded-md border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+          {completionError}
+        </p>
+      ) : null}
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {sessions.length > 0 ? (
           sessions.map((session) => (
             <div key={session.id} className="space-y-2">
-              <WorkoutCard session={session} completeAction={markSessionCompleteAction} />
+              <WorkoutCard session={session} completeAction={markSessionCompleteAction} returnPath="/dashboard" />
               <Link className="text-sm text-orange-300 underline" href={`/dashboard/session/${session.id}`}>
                 View session details
               </Link>

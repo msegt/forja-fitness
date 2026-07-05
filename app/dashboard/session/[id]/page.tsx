@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import type { Exercise } from "@/types";
 import { markSessionCompleteAction } from "@/app/dashboard/actions";
+import { getSessionCompletionErrorMessage } from "@/app/dashboard/completionErrors";
 
 function isExercises(value: unknown): value is Exercise[] {
   return (
@@ -19,7 +20,14 @@ function isExercises(value: unknown): value is Exercise[] {
   );
 }
 
-export default async function SessionDetailPage({ params }: { params: { id: string } }) {
+export default async function SessionDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams?: { error?: string | string[] };
+}) {
+  const completionError = getSessionCompletionErrorMessage(searchParams?.error);
   const supabase = await createClient();
   const {
     data: { user },
@@ -54,8 +62,14 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
           <ExerciseItem key={exercise.name} exercise={exercise} />
         ))}
       </section>
+      {completionError ? (
+        <p className="rounded-md border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+          {completionError}
+        </p>
+      ) : null}
       <form action={markSessionCompleteAction}>
         <input type="hidden" name="sessionId" value={params.id} />
+        <input type="hidden" name="returnPath" value={`/dashboard/session/${params.id}`} />
         <Button type="submit" disabled={Boolean(session.completed)}>
           {session.completed ? "Completed" : "Mark session complete"}
         </Button>

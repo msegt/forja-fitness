@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/Button";
 type WorkoutCardProps = {
   session: Session;
   completeAction?: (formData: FormData) => Promise<void>;
+  returnPath?: string;
 };
 
 const MIN_WORKOUT_DURATION_MINUTES = 15;
 const ESTIMATED_MINUTES_PER_EXERCISE = 6;
 const WORKOUT_DURATION_BUFFER_MINUTES = 15;
 
-export function WorkoutCard({ session, completeAction }: WorkoutCardProps) {
+export function WorkoutCard({ session, completeAction, returnPath = "/dashboard" }: WorkoutCardProps) {
   const sessionLengthMinutes = session.session_length_minutes;
   const configuredSessionLength =
     typeof sessionLengthMinutes === "number" && Number.isFinite(sessionLengthMinutes)
@@ -43,6 +44,7 @@ export function WorkoutCard({ session, completeAction }: WorkoutCardProps) {
       ) : completeAction ? (
         <form action={completeAction}>
           <input type="hidden" name="sessionId" value={session.id} />
+          <input type="hidden" name="returnPath" value={returnPath} />
           <Button type="submit">
             Mark as complete
           </Button>
