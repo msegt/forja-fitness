@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,12 +40,11 @@ export default function LoginPage() {
     setIsSubmitting(true);
     setErrorMessage("");
     const supabase = createClient();
+    const redirectTo = siteUrl ? `${siteUrl}/dashboard` : undefined;
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-      },
+      options: redirectTo ? { redirectTo } : undefined,
     });
 
     if (error) {

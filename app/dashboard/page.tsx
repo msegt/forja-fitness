@@ -5,6 +5,19 @@ import { Button } from "@/components/ui/Button";
 import type { Session } from "@/types";
 import { createClient } from "@/lib/supabase/server";
 
+function isSessionExercises(value: unknown): value is Session["exercises"] {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (exercise) =>
+        typeof exercise === "object" &&
+        exercise !== null &&
+        "name" in exercise &&
+        "youtube_query" in exercise,
+    )
+  );
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
@@ -23,7 +36,7 @@ export default async function DashboardPage() {
       id: session.id,
       day_label: session.day_label ?? "Session",
       focus: session.focus ?? "Training",
-      exercises: Array.isArray(session.exercises) ? (session.exercises as Session["exercises"]) : [],
+      exercises: isSessionExercises(session.exercises) ? session.exercises : [],
       completed: Boolean(session.completed),
     }));
   }

@@ -7,9 +7,13 @@ type WorkoutCardProps = {
   onComplete?: (sessionId: string) => void;
 };
 
+const MIN_WORKOUT_DURATION_MINUTES = 15;
+const ESTIMATED_MINUTES_PER_EXERCISE = 6;
+const WORKOUT_DURATION_BUFFER_MINUTES = 15;
+
 export function WorkoutCard({ session, onComplete }: WorkoutCardProps) {
-  const estimatedMin = Math.max(15, session.exercises.length * 6);
-  const estimatedMax = estimatedMin + 15;
+  const estimatedMin = Math.max(MIN_WORKOUT_DURATION_MINUTES, session.exercises.length * ESTIMATED_MINUTES_PER_EXERCISE);
+  const estimatedMax = estimatedMin + WORKOUT_DURATION_BUFFER_MINUTES;
 
   return (
     <Card className="space-y-3">

@@ -7,8 +7,7 @@ import type { WorkoutPlan } from "@/types";
 export async function POST(request: NextRequest) {
   const profile = (await request.json()) as Record<string, unknown> & { savePlan?: boolean; plan?: WorkoutPlan };
   const daysPerWeek = Number(profile.daysPerWeek ?? 3);
-  const sessionLengthInput = String(profile.sessionLength ?? "30");
-  const sessionLengthMinutes = sessionLengthInput === "60+" ? 60 : Number(sessionLengthInput);
+  const sessionLengthMinutes = Number(profile.sessionLength ?? 30);
 
   try {
     const plan = profile.savePlan && profile.plan ? profile.plan : await generateWorkoutPlan(profile, daysPerWeek);

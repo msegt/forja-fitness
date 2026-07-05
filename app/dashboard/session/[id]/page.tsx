@@ -5,6 +5,19 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import type { Exercise } from "@/types";
 
+function isExercises(value: unknown): value is Exercise[] {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (exercise) =>
+        typeof exercise === "object" &&
+        exercise !== null &&
+        "name" in exercise &&
+        "youtube_query" in exercise,
+    )
+  );
+}
+
 export default async function SessionDetailPage({ params }: { params: { id: string } }) {
   const supabase = await createClient();
   const {
@@ -26,7 +39,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
     notFound();
   }
 
-  const exercises = Array.isArray(session.exercises) ? (session.exercises as Exercise[]) : [];
+  const exercises = isExercises(session.exercises) ? session.exercises : [];
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-4xl space-y-5 px-4 py-8">
