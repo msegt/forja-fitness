@@ -87,7 +87,6 @@ export async function askAI(
   prompt: string,
   userKey: UserKeyConfig,
 ): Promise<string> {
-  // Resolve which key + provider to use
   const provider: AiProvider =
     userKey.provider && userKey.apiKey ? userKey.provider : "gemini";
   const apiKey: string =
@@ -110,21 +109,30 @@ export async function askAI(
   throw lastError;
 }
 
-/** Load the user's key config from Supabase (server-side helper) */
-export async function loadUserKeyConfig(userId: string, supabase: {
-  from: (table: string) => {
-    select: (cols: string) => {
-      eq: (col: string, val: string) => {
-        maybeSingle: () => Promise<{ data: { ai_provider?: string | null; ai_api_key?: string | null } | null }>
-      }
-    }
-  }
-}): Promise<UserKeyConfig> {
-  const { data } = await supabase
+// Accept `unknown` so callers don't need to cast the Supabase client type
+export async function loadUserKeyConfig(
+  userId: string,
+  supabase: unknown,
+): Promise<UserKeyConfig> {
+  type SupabaseLike = {
+    from: (table: string) => {
+      select: (cols: string) => {
+        eq: (col: string, val: string) => {
+          maybeSingle: () => Promise<{
+            data: { ai_provider?: string | null; ai_api_key?: string | null } | null;
+          }>;
+        };
+      };
+    };
+  };
+
+  const db = supabase as SupabaseLike;
+  const { data } = await db
     .from("profiles")
     .select("ai_provider, ai_api_key")
     .eq("id", userId)
     .maybeSingle();
+
   return {
     provider: (data?.ai_provider as AiProvider | null) ?? null,
     apiKey: data?.ai_api_key ?? null,
