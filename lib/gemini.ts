@@ -42,7 +42,6 @@ export async function generateWorkoutPlan(
 ): Promise<WorkoutPlan> {
   const hasKey = userKey.apiKey || process.env.GEMINI_API_KEY;
   if (!hasKey) {
-    // Static fallback when no key at all
     return {
       weeks: [{
         week: 1,
@@ -53,7 +52,7 @@ export async function generateWorkoutPlan(
             { name: "Bodyweight Squat", sets: 3, reps: "10-12", rest: "60s", youtube_query: "bodyweight squat form", coaching_tip: "Drive through your heels and keep your chest tall.", instructions: ["Stand feet shoulder-width apart.", "Brace core, keep chest up.", "Lower until thighs are parallel.", "Drive back up through heels."], muscles: ["quads", "glutes", "core"] },
             { name: "Glute Bridge", sets: 3, reps: "12-15", rest: "45s", youtube_query: "glute bridge form", coaching_tip: "Squeeze at the top for a full second.", instructions: ["Lie on back, knees bent, feet flat.", "Engage core.", "Press hips up to form a straight line.", "Lower with control."], muscles: ["glutes", "hamstrings"] },
             { name: "Incline Press-Up", sets: 3, reps: "8-10", rest: "60s", youtube_query: "incline push up", coaching_tip: "Keep your body in a straight line throughout.", instructions: ["Hands on raised surface wider than shoulders.", "Body forms a plank.", "Lower chest to surface.", "Press back up."], muscles: ["chest", "shoulders", "triceps"] },
-            { name: "Dead Bug", sets: 3, reps: "8 each side", rest: "45s", youtube_query: "dead bug core exercise", coaching_tip: "Keep your lower back pressed gently into the floor.", instructions: ["Lie on back, arms up, knees at 90°.", "Breathe out and lower opposite arm and leg.", "Keep lower back flat.", "Return and repeat other side."], muscles: ["core", "abs"] },
+            { name: "Dead Bug", sets: 3, reps: "8 each side", rest: "45s", youtube_query: "dead bug core exercise", coaching_tip: "Keep your lower back pressed gently into the floor.", instructions: ["Lie on back, arms up, knees at 90\u00b0.", "Breathe out and lower opposite arm and leg.", "Keep lower back flat.", "Return and repeat other side."], muscles: ["core", "abs"] },
           ],
         })),
       }],
@@ -70,14 +69,22 @@ export async function generateWorkoutPlan(
   }
 }
 
+export interface ForjaContext {
+  name?: string;
+  fitnessLevel?: string;
+  goals?: string[];
+  sessionSummary?: string;
+  mode?: string;
+}
+
 export async function chatWithForja(
-  context: { name?: string; fitnessLevel?: string; goals?: string[]; sessionSummary?: string },
+  context: ForjaContext,
   message: string,
   userKey: UserKeyConfig = FALLBACK_KEY,
 ) {
   const hasKey = userKey.apiKey || process.env.GEMINI_API_KEY;
   if (!hasKey) return "I\u2019m here for you. Stay consistent and focus on quality movement today.";
 
-  const system = `You are Forja, a warm British personal trainer AI for busy mums. Be concise and practical. User: name=${context.name ?? "there"}, level=${context.fitnessLevel ?? "beginner"}, goals=${(context.goals ?? []).join(",") || "general fitness"}${context.sessionSummary ? `, plan summary=${context.sessionSummary}` : ""}.`;
+  const system = `You are Forja, a warm British personal trainer AI for busy mums. Be concise and practical. User: name=${context.name ?? "there"}, level=${context.fitnessLevel ?? "beginner"}, goals=${(context.goals ?? []).join(",") || "general fitness"}${context.sessionSummary ? `, plan summary=${context.sessionSummary}` : ""}${context.mode ? `, mode=${context.mode}` : ""}.`;
   return askAI(`${system}\n\nUser: ${message}`, userKey);
 }
