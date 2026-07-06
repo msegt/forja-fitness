@@ -25,38 +25,38 @@ export default async function SessionDetailPage({
   params,
   searchParams,
 }: {
-  params: { id: string };
-  searchParams?: { error?: string | string[] };
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{ error?: string | string[] }>;
 }) {
-  const completionError = getSessionCompletionErrorMessage(searchParams?.error);
+  const { id } = await params;
+  const resolvedSearch = await searchParams;
+  const completionError = getSessionCompletionErrorMessage(resolvedSearch?.error);
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    notFound();
-  }
+  if (!user) notFound();
 
   const { data: session } = await supabase
     .from("sessions")
     .select("id, day_label, focus, exercises, completed")
     .eq("user_id", user.id)
-    .eq("id", params.id)
+    .eq("id", id)
     .maybeSingle();
 
-  if (!session) {
-    notFound();
-  }
+  if (!session) notFound();
 
   const exercises = isExercises(session.exercises) ? session.exercises : [];
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-4xl space-y-5 px-4 py-8">
-      <Link href="/dashboard" className="text-sm text-orange-300 underline">Back to dashboard</Link>
+      <Link href="/dashboard" className="text-sm font-medium text-coral-400 hover:text-coral-300">
+        ← Back to dashboard
+      </Link>
       <header>
-        <p className="text-sm uppercase tracking-wide text-slate-400">{session.day_label ?? "Session"}</p>
-        <h1 className="text-3xl font-bold text-slate-100">{session.focus ?? "Workout session"}</h1>
+        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">{session.day_label ?? "Session"}</p>
+        <h1 className="text-3xl font-bold text-white">{session.focus ?? "Workout session"}</h1>
       </header>
       <section className="space-y-3">
         {exercises.map((exercise) => (
@@ -66,16 +66,16 @@ export default async function SessionDetailPage({
       {completionError ? (
         <>
           <ClearCompletionError />
-          <p className="rounded-md border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+          <p className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
             {completionError}
           </p>
         </>
       ) : null}
       <form action={markSessionCompleteAction}>
-        <input type="hidden" name="sessionId" value={params.id} />
-        <input type="hidden" name="returnPath" value={`/dashboard/session/${params.id}`} />
-        <Button type="submit" disabled={Boolean(session.completed)}>
-          {session.completed ? "Completed" : "Mark session complete"}
+        <input type="hidden" name="sessionId" value={id} />
+        <input type="hidden" name="returnPath" value={`/dashboard/session/${id}`} />
+        <Button type="submit" disabled={Boolean(session.completed)} className="w-full sm:w-auto">
+          {session.completed ? "✓ Completed" : "Mark session complete"}
         </Button>
       </form>
     </main>
