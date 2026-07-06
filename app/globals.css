@@ -8,5 +8,22 @@
 
 body {
   min-height: 100vh;
-  background: radial-gradient(circle at top, #1e293b, #020617 45%);
+  /* Warm energising gradient: deep coral-tinged dark at top, near-black at bottom */
+  background: radial-gradient(ellipse 120% 60% at 50% -10%, #3b1a0f 0%, #0f0a0a 55%);
+}
+
+/* Prevent iOS auto-zoom on any input / select / textarea */
+input,
+select,
+textarea {
+  font-size: 16px !important;
+}
+
+/* But let Tailwind still control line-height, letter-spacing etc */
+@media (min-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: inherit !important;
+  }
 }

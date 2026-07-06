@@ -18,34 +18,44 @@ export function WorkoutCard({ session, completeAction, returnPath = "/dashboard"
     typeof sessionLengthMinutes === "number" && Number.isFinite(sessionLengthMinutes)
       ? sessionLengthMinutes
       : null;
-  const estimatedMinMinutes = configuredSessionLength !== null
-    ? configuredSessionLength
-    : Math.max(MIN_WORKOUT_DURATION_MINUTES, session.exercises.length * ESTIMATED_MINUTES_PER_EXERCISE);
-  const estimatedMaxMinutes = configuredSessionLength !== null
-    ? undefined
-    : estimatedMinMinutes + WORKOUT_DURATION_BUFFER_MINUTES;
+  const estimatedMinMinutes =
+    configuredSessionLength !== null
+      ? configuredSessionLength
+      : Math.max(MIN_WORKOUT_DURATION_MINUTES, session.exercises.length * ESTIMATED_MINUTES_PER_EXERCISE);
+  const estimatedMaxMinutes =
+    configuredSessionLength !== null ? undefined : estimatedMinMinutes + WORKOUT_DURATION_BUFFER_MINUTES;
 
   return (
-    <Card className="space-y-3">
+    <Card className={`space-y-3 ${session.completed ? "opacity-70" : ""}`}>
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-xs uppercase tracking-wide text-slate-400">{session.day_label}</p>
-          <h3 className="text-lg font-semibold text-slate-100">{session.focus}</h3>
+          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">{session.day_label}</p>
+          <h3 className="text-lg font-bold text-white">{session.focus}</h3>
         </div>
-        <span className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-300">{session.exercises.length} exercises</span>
+        <div className="flex flex-col items-end gap-1">
+          <span className="rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs font-medium text-zinc-300">
+            {session.exercises.length} exercises
+          </span>
+          {session.completed ? (
+            <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
+              \u2713 Done
+            </span>
+          ) : null}
+        </div>
       </div>
-      <p className="text-sm text-slate-300">
-        Estimated length: {estimatedMaxMinutes ? `${estimatedMinMinutes}–${estimatedMaxMinutes}` : estimatedMinMinutes} minutes
+      <p className="flex items-center gap-1.5 text-sm text-zinc-400">
+        <span>\u23F1</span>
+        {estimatedMaxMinutes ? `${estimatedMinMinutes}\u2013${estimatedMaxMinutes}` : estimatedMinMinutes} min
       </p>
       {session.completed ? (
-        <Button variant="secondary" disabled>
+        <Button variant="secondary" disabled className="w-full">
           Completed
         </Button>
       ) : completeAction ? (
         <form action={completeAction}>
           <input type="hidden" name="sessionId" value={session.id} />
           <input type="hidden" name="returnPath" value={returnPath} />
-          <Button type="submit">
+          <Button type="submit" className="w-full">
             Mark as complete
           </Button>
         </form>

@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Forja Fitness",
-  description: "Forja is your AI-powered British personal trainer for progressive weekly plans.",
+  description: "Forja is your AI-powered personal trainer for progressive weekly plans.",
 };
 
 export default async function RootLayout({
@@ -20,7 +20,11 @@ export default async function RootLayout({
 
   return (
     <html lang="en-GB">
-      <body className="bg-slate-950 text-slate-50 antialiased">
+      <head>
+        {/* Prevents iOS Safari from auto-zooming on input focus */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+      </head>
+      <body className="bg-zinc-950 text-slate-50 antialiased">
         {user ? <NavBar /> : null}
         <div className={user ? "pb-20 md:pb-0" : undefined}>{children}</div>
       </body>
