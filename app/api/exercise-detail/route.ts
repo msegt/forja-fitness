@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { askAI, loadUserKeyConfig } from "@/lib/ai-client";
+import { askAI, loadUserKeyConfig, type UserKeyConfig } from "@/lib/ai-client";
 import { createClient } from "@/lib/supabase/server";
 
 const VALID_MUSCLES = "chest,shoulders,biceps,triceps,lats,traps,back,abs,core,obliques,glutes,quads,hamstrings,calves,hip flexors,lower back,pelvic floor";
@@ -13,10 +13,12 @@ export async function POST(request: NextRequest) {
   if (names.length === 0)
     return NextResponse.json({ error: "At least one exercise name is required" }, { status: 400 });
 
-  // Try to load user key (gracefully ignore auth errors)
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const userKey = user ? await loadUserKeyConfig(user.id, supabase as Parameters<typeof loadUserKeyConfig>[1]) : { provider: null, apiKey: null };
+  let userKey: UserKeyConfig = { provider: null, apiKey: null };
+  if (user) {
+    userKey = await loadUserKeyConfig(user.id, supabase as Parameters<typeof loadUserKeyConfig>[1]);
+  }
 
   const prompt = [
     `You are a personal trainer. For each exercise listed, return raw JSON only (no markdown).`,

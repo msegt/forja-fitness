@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { chatWithForja } from "@/lib/gemini";
 import { createClient } from "@/lib/supabase/server";
-import { loadUserKeyConfig } from "@/lib/ai-client";
+import { loadUserKeyConfig, type UserKeyConfig } from "@/lib/ai-client";
 
 export async function POST(request: NextRequest) {
   const { message } = (await request.json()) as { message?: string };
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   let context: { name?: string; fitnessLevel?: string; goals?: string[]; sessionSummary?: string } = {};
-  let userKey = { provider: null as null, apiKey: null as null };
+  let userKey: UserKeyConfig = { provider: null, apiKey: null };
 
   if (user) {
     const [{ data: profile }, { data: plan }, { data: sessions }] = await Promise.all([

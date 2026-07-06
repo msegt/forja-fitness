@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateWorkoutPlan } from "@/lib/gemini";
 import { createClient } from "@/lib/supabase/server";
-import { loadUserKeyConfig } from "@/lib/ai-client";
+import { loadUserKeyConfig, type UserKeyConfig } from "@/lib/ai-client";
 
 const RETRY_DELAYS_MS = [2000, 4000, 6000, 8000];
 
@@ -16,7 +16,10 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const userKey = user ? await loadUserKeyConfig(user.id, supabase as Parameters<typeof loadUserKeyConfig>[1]) : { provider: null, apiKey: null };
+  let userKey: UserKeyConfig = { provider: null, apiKey: null };
+  if (user) {
+    userKey = await loadUserKeyConfig(user.id, supabase as Parameters<typeof loadUserKeyConfig>[1]);
+  }
 
   const daysPerWeek = typeof body.daysPerWeek === "number" ? body.daysPerWeek : 3;
 
