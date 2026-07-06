@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { WorkoutPlan } from "@/types";
 
-const MODEL = "gemini-1.5-flash-8b";
+const MODEL = "gemini-1.5-flash-8b-001";
 
 const PLAN_SYSTEM_PROMPT = [
   "You are Forja, a friendly, encouraging British personal trainer AI.",
