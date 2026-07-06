@@ -6,10 +6,10 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { href: "/dashboard", label: "Dashboard", emoji: "\uD83C\uDFCB\uFE0F" },
-  { href: "/chat", label: "AI Trainer", emoji: "\uD83E\uDD16" },
-  { href: "/holiday", label: "Holiday", emoji: "\u2600\uFE0F" },
-  { href: "/profile", label: "Profile", emoji: "\uD83D\uDC64" },
+  { href: "/dashboard", label: "Dashboard", emoji: "🏋️" },
+  { href: "/chat", label: "AI Trainer", emoji: "🤖" },
+  { href: "/holiday", label: "Holiday", emoji: "☀️" },
+  { href: "/profile", label: "Profile", emoji: "👤" },
 ];
 
 export function NavBar() {
@@ -31,16 +31,14 @@ export function NavBar() {
       <nav className="hidden border-b border-zinc-800 bg-zinc-900/95 backdrop-blur md:block">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-1">
-            <span className="mr-4 text-sm font-bold tracking-tight text-white">Forja \uD83D\uDD25</span>
+            <span className="mr-4 text-sm font-bold tracking-tight text-white">Forja 🔥</span>
             {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={cn(
                   "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors hover:text-coral-300",
-                  isActive(link.href)
-                    ? "bg-coral-500/15 text-coral-300"
-                    : "text-zinc-400",
+                  isActive(link.href) ? "bg-coral-500/15 text-coral-300" : "text-zinc-400",
                 )}
               >
                 {link.label}
@@ -66,9 +64,7 @@ export function NavBar() {
               href={link.href}
               className={cn(
                 "flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-2 text-[10px] font-medium transition-colors",
-                isActive(link.href)
-                  ? "text-coral-300"
-                  : "text-zinc-500 hover:text-zinc-300",
+                isActive(link.href) ? "text-coral-300" : "text-zinc-500 hover:text-zinc-300",
               )}
             >
               <span className="text-lg leading-none">{link.emoji}</span>
@@ -80,7 +76,7 @@ export function NavBar() {
             onClick={handleLogout}
             className="flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-2 text-[10px] font-medium text-zinc-500 transition-colors hover:text-zinc-300"
           >
-            <span className="text-lg leading-none">\uD83D\uDEAA</span>
+            <span className="text-lg leading-none">🚪</span>
             <span>Log out</span>
           </button>
         </div>

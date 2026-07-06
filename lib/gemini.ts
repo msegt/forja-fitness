@@ -1,7 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { WorkoutPlan } from "@/types";
 
-// gemini-2.5-flash-lite: 1,000 req/day free tier, current production model
 const MODEL = "gemini-2.5-flash-lite";
 
 const PLAN_SYSTEM_PROMPT = [
@@ -9,52 +8,42 @@ const PLAN_SYSTEM_PROMPT = [
   "Generate a structured 4-week progressive workout plan.",
   "Each week contains exactly the requested number of sessions.",
   "Each session includes:",
-  '- A descriptive focus area (e.g. "Lower Body Strength & Core")',
-  "- 4\u20136 exercises with sets, reps or duration, and rest periods",
-  "- A short YouTube search query string for each exercise (in English) that would return a good instructional or follow-along video",
-  "- Motivational notes tailored to their goals and level",
-  "IMPORTANT POSTNATAL RULES: If the profile indicates postnatal=true or mentions postnatal recovery, c-section, diastasis recti, SPD, or pelvic floor in health_notes:",
-  "  - Avoid all high-impact exercises (jumping, running, burpees) for the first 3 weeks",
-  "  - Include pelvic floor activation cues in coaching tips",
-  "  - Prioritise core rehabilitation exercises (diaphragmatic breathing, heel slides, dead bugs)",
-  "  - Avoid heavy loading or exercises that cause intra-abdominal pressure in early weeks",
+  "- A descriptive focus area (e.g. 'Lower Body Strength & Core')",
+  "- 4-6 exercises, each with:",
+  "  - sets (number)",
+  "  - reps (string, e.g. '10-12')",
+  "  - duration (string, only if timed, e.g. '45s')",
+  "  - rest (string, e.g. '60s')",
+  "  - youtube_query (short English search string for an instructional video)",
+  "  - coaching_tip (one encouraging sentence, postnatal-safe cue if postnatal)",
+  "  - instructions (array of 3-5 clear step-by-step strings describing how to perform the exercise)",
+  "  - muscles (array of muscle group names targeted, e.g. ['glutes', 'hamstrings', 'core'])",
+  "POSTNATAL RULES: If postnatal=true or health_notes mentions postnatal/c-section/diastasis/SPD/pelvic floor:",
+  "  - Avoid all high-impact moves (jumping, running, burpees) for weeks 1-2",
+  "  - Include pelvic floor activation cues in coaching_tip",
+  "  - Prioritise core rehab (diaphragmatic breathing, heel slides, dead bugs)",
+  "  - No heavy intra-abdominal pressure exercises in early weeks",
   "  - Progress gradually to low-impact cardio from week 3",
-  "IMPORTANT: Respond with raw JSON only. Do not wrap the response in markdown code fences or any other formatting.",
-  "Format the output as valid JSON matching this schema:",
-  "{ weeks: [ { week: number, sessions: [ { day: string, focus: string, exercises: [ { name: string, sets: number, reps: string, duration: string, rest: string, youtube_query: string, coaching_tip: string } ] } ] } ] }",
+  "IMPORTANT: Respond with raw JSON only — no markdown fences, no prose.",
+  "Schema: { weeks: [ { week: number, sessions: [ { day: string, focus: string, exercises: [ { name: string, sets: number, reps: string, duration: string, rest: string, youtube_query: string, coaching_tip: string, instructions: string[], muscles: string[] } ] } ] } ] }",
 ].join("\n");
 
 function getClient() {
   const key = process.env.GEMINI_API_KEY;
-  if (!key) {
-    return null;
-  }
+  if (!key) return null;
   return new GoogleGenerativeAI(key);
 }
 
-/**
- * Extracts the JSON object/array from a raw string, handling code fences
- * and any surrounding prose the model may have added.
- */
 function extractJson(raw: string): string {
   const firstBrace = raw.indexOf("{");
   const firstBracket = raw.indexOf("[");
   const lastBrace = raw.lastIndexOf("}");
   const lastBracket = raw.lastIndexOf("]");
-
   const start =
-    firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)
-      ? firstBrace
-      : firstBracket;
+    firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket) ? firstBrace : firstBracket;
   const end =
-    lastBrace !== -1 && (lastBracket === -1 || lastBrace > lastBracket)
-      ? lastBrace
-      : lastBracket;
-
-  if (start !== -1 && end !== -1 && end > start) {
-    return raw.slice(start, end + 1);
-  }
-
+    lastBrace !== -1 && (lastBracket === -1 || lastBrace > lastBracket) ? lastBrace : lastBracket;
+  if (start !== -1 && end !== -1 && end > start) return raw.slice(start, end + 1);
   return raw.replace(/^```[\w]*\s*/i, "").replace(/\s*```\s*$/i, "").trim();
 }
 
@@ -77,6 +66,13 @@ export async function generateWorkoutPlan(profileData: unknown, daysPerWeek: num
                 rest: "60s",
                 youtube_query: "bodyweight squat technique",
                 coaching_tip: "Keep your chest proud and drive through your heels.",
+                instructions: [
+                  "Stand with feet shoulder-width apart, toes slightly turned out.",
+                  "Brace your core and keep your chest tall.",
+                  "Bend your knees and push your hips back as if sitting into a chair.",
+                  "Lower until thighs are parallel to the floor, then drive back up.",
+                ],
+                muscles: ["quads", "glutes", "core"],
               },
               {
                 name: "Incline press-up",
@@ -85,6 +81,13 @@ export async function generateWorkoutPlan(profileData: unknown, daysPerWeek: num
                 rest: "60s",
                 youtube_query: "incline push up form",
                 coaching_tip: "Lower under control and keep your core braced.",
+                instructions: [
+                  "Place hands on a raised surface (bench, sofa edge) wider than shoulder-width.",
+                  "Walk feet back until your body forms a straight line.",
+                  "Bend elbows to lower your chest to the surface.",
+                  "Press back up to the start position.",
+                ],
+                muscles: ["chest", "shoulders", "triceps"],
               },
               {
                 name: "Glute bridge",
@@ -93,13 +96,27 @@ export async function generateWorkoutPlan(profileData: unknown, daysPerWeek: num
                 rest: "45s",
                 youtube_query: "glute bridge exercise form",
                 coaching_tip: "Squeeze your glutes at the top for one second.",
+                instructions: [
+                  "Lie on your back with knees bent, feet flat on the floor hip-width apart.",
+                  "Engage your core gently.",
+                  "Press through your heels to lift your hips until your body forms a straight line from shoulders to knees.",
+                  "Hold one second, then lower with control.",
+                ],
+                muscles: ["glutes", "hamstrings", "core"],
               },
               {
-                name: "Marching plank",
+                name: "Dead bug",
                 duration: "45s",
                 rest: "45s",
-                youtube_query: "plank shoulder taps tutorial",
-                coaching_tip: "Keep your hips still as you tap each shoulder.",
+                youtube_query: "dead bug exercise core",
+                coaching_tip: "Keep your lower back pressed gently into the floor throughout.",
+                instructions: [
+                  "Lie on your back, arms extended toward the ceiling, knees bent at 90°.",
+                  "Breathe out and slowly lower your right arm and left leg toward the floor.",
+                  "Keep your lower back pressed down — do not let it arch.",
+                  "Return to start and repeat on the other side.",
+                ],
+                muscles: ["core", "abs", "pelvic floor"],
               },
             ],
           })),
@@ -115,11 +132,10 @@ export async function generateWorkoutPlan(profileData: unknown, daysPerWeek: num
 
   try {
     const cleaned = extractJson(raw);
-    const parsed = JSON.parse(cleaned) as WorkoutPlan;
-    return parsed;
+    return JSON.parse(cleaned) as WorkoutPlan;
   } catch {
     throw new Error(
-      `Gemini returned an invalid plan format. Expected a JSON object with a 'weeks' array. Raw response starts with: ${raw.slice(0, 200)}`,
+      `Gemini returned an invalid plan format. Raw response starts with: ${raw.slice(0, 200)}`,
     );
   }
 }

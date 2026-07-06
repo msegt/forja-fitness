@@ -38,14 +38,14 @@ export function WorkoutCard({ session, completeAction, returnPath = "/dashboard"
           </span>
           {session.completed ? (
             <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
-              \u2713 Done
+              ✓ Done
             </span>
           ) : null}
         </div>
       </div>
       <p className="flex items-center gap-1.5 text-sm text-zinc-400">
-        <span>\u23F1</span>
-        {estimatedMaxMinutes ? `${estimatedMinMinutes}\u2013${estimatedMaxMinutes}` : estimatedMinMinutes} min
+        <span>⏱</span>
+        {estimatedMaxMinutes ? `${estimatedMinMinutes}–${estimatedMaxMinutes}` : estimatedMinMinutes} min
       </p>
       {session.completed ? (
         <Button variant="secondary" disabled className="w-full">

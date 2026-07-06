@@ -21,6 +21,10 @@ export type Exercise = {
   youtube_url?: string;
   youtube_thumbnail?: string;
   coaching_tip?: string;
+  /** Step-by-step instructions for how to perform the exercise */
+  instructions?: string[];
+  /** Muscles targeted, e.g. ["glutes", "hamstrings", "core"] */
+  muscles?: string[];
 };
 
 export type Session = {
