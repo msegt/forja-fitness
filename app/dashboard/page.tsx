@@ -44,9 +44,9 @@ function getGreeting(name: string | null): string {
   const hour = new Date().getHours();
   const first = name ? name.split(" ")[0] : null;
   const suffix = first ? `, ${first}` : "";
-  if (hour < 12) return `Good morning${suffix} 🌅`;
-  if (hour < 17) return `Good afternoon${suffix} ☀️`;
-  return `Good evening${suffix} 🌙`;
+  if (hour < 12) return `Good morning${suffix} \uD83C\uDF05`;
+  if (hour < 17) return `Good afternoon${suffix} \u2600\uFE0F`;
+  return `Good evening${suffix} \uD83C\uDF19`;
 }
 
 export default async function DashboardPage({
@@ -87,8 +87,7 @@ export default async function DashboardPage({
   const completed = sessions.filter((session) => session.completed).length;
   const completedPercentage = sessions.length > 0 ? Math.round((completed / sessions.length) * 100) : 0;
 
-  // Group sessions into weeks for a cleaner layout when all 4 weeks are present
-  const weekGroups: { label: string; sessions: Session[] }[] = [];
+  // Group sessions into weeks using Array.from to avoid downlevelIteration issues
   const weekMap = new Map<string, Session[]>();
   for (const session of sessions) {
     const match = session.day_label.match(/^(Week \d+)/i);
@@ -96,9 +95,9 @@ export default async function DashboardPage({
     if (!weekMap.has(key)) weekMap.set(key, []);
     weekMap.get(key)!.push(session);
   }
-  for (const [label, wSessions] of weekMap) {
-    weekGroups.push({ label, sessions: wSessions });
-  }
+  const weekGroups: { label: string; sessions: Session[] }[] = Array.from(weekMap.entries()).map(
+    ([label, wSessions]) => ({ label, sessions: wSessions }),
+  );
 
   const greeting = getGreeting(profileName);
 
@@ -156,7 +155,7 @@ export default async function DashboardPage({
         </div>
       ) : (
         <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-6 space-y-3">
-          <p className="text-base font-medium text-slate-100">No sessions yet — let&apos;s change that! 💪</p>
+          <p className="text-base font-medium text-slate-100">No sessions yet \u2014 let&apos;s change that! \uD83D\uDCAA</p>
           <p className="text-sm text-slate-300">
             Answer a few quick questions and Forja will build your first four-week programme, tailored to how much time you actually have.
           </p>
