@@ -13,6 +13,12 @@ const PLAN_SYSTEM_PROMPT = [
   "- 4\u20136 exercises with sets, reps or duration, and rest periods",
   "- A short YouTube search query string for each exercise (in English) that would return a good instructional or follow-along video",
   "- Motivational notes tailored to their goals and level",
+  "IMPORTANT POSTNATAL RULES: If the profile indicates postnatal=true or mentions postnatal recovery, c-section, diastasis recti, SPD, or pelvic floor in health_notes:",
+  "  - Avoid all high-impact exercises (jumping, running, burpees) for the first 3 weeks",
+  "  - Include pelvic floor activation cues in coaching tips",
+  "  - Prioritise core rehabilitation exercises (diaphragmatic breathing, heel slides, dead bugs)",
+  "  - Avoid heavy loading or exercises that cause intra-abdominal pressure in early weeks",
+  "  - Progress gradually to low-impact cardio from week 3",
   "IMPORTANT: Respond with raw JSON only. Do not wrap the response in markdown code fences or any other formatting.",
   "Format the output as valid JSON matching this schema:",
   "{ weeks: [ { week: number, sessions: [ { day: string, focus: string, exercises: [ { name: string, sets: number, reps: string, duration: string, rest: string, youtube_query: string, coaching_tip: string } ] } ] } ] }",
@@ -126,9 +132,7 @@ export async function chatWithForja(context: unknown, message: string) {
   }
 
   const model = client.getGenerativeModel({ model: MODEL });
-  const prompt = `You are Forja, a British personal trainer AI. You have access to this user's profile and current workout plan: ${JSON.stringify(
-    context,
-  )}. Answer questions, adjust workouts, provide motivation, swap exercises if needed. Always respond in British English.\n\nUser: ${message}`;
+  const prompt = `You are Forja, a warm and encouraging British personal trainer AI. You specialise in helping busy mums, including postnatal women, get back to feeling strong and energised. You have access to this user's profile and current workout plan: ${JSON.stringify(context)}. Answer questions, adjust workouts, provide motivation, swap exercises if needed. If the user is postnatal, always keep pelvic floor safety in mind. Always respond in British English, keep responses concise and practical.\n\nUser: ${message}`;
   const response = await model.generateContent(prompt);
   return response.response.text();
 }

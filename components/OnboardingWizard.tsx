@@ -14,6 +14,7 @@ const goals = [
   "improve cardio",
   "general fitness",
   "reduce stress",
+  "postnatal recovery",
 ];
 
 const equipmentOptions = ["none", "resistance bands", "dumbbells", "kettlebell", "pull-up bar", "gym access", "other"];
@@ -32,6 +33,7 @@ export function OnboardingWizard() {
     weightKg: "",
     heightCm: "",
     fitnessLevel: "beginner",
+    postnatal: false,
     goals: [] as string[],
     daysPerWeek: "3",
     sessionLength: "30",
@@ -72,7 +74,6 @@ export function OnboardingWizard() {
       }
 
       setPlanPreview(payload.plan);
-      setStep(totalSteps);
       setShowPreview(true);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Something went wrong while generating your plan.");
@@ -117,38 +118,57 @@ export function OnboardingWizard() {
   return (
     <Card className="mx-auto w-full max-w-2xl space-y-5">
       {!showPreview ? <p className="text-xs uppercase tracking-wide text-slate-400">Step {step} of {totalSteps}</p> : null}
-      {step === 1 ? <p className="text-sm text-slate-200">Welcome to Forja. We&apos;ll shape a training programme that fits your life.</p> : null}
+      {step === 1 ? (
+        <div className="space-y-3">
+          <p className="text-base font-medium text-slate-100">Welcome to Forja 👋</p>
+          <p className="text-sm text-slate-300">
+            We&apos;ll build a training programme that genuinely fits around your life — short enough to squeeze in during nap time, effective enough to make you feel strong again.
+          </p>
+        </div>
+      ) : null}
       {step === 2 ? (
         <div className="space-y-3">
           <p className="text-base font-medium text-slate-100">Tell us about yourself</p>
           <div className="grid gap-3 sm:grid-cols-2">
-          <label htmlFor="onboarding-full-name" className="space-y-1 text-sm text-slate-300">
-            Full name
-            <input id="onboarding-full-name" required aria-required="true" className="mt-1 w-full rounded-lg bg-slate-800 p-2 text-sm" placeholder="Full name" value={form.fullName} onChange={(event) => setForm((prev) => ({ ...prev, fullName: event.target.value }))} />
-          </label>
-          <label htmlFor="onboarding-date-of-birth" className="space-y-1 text-sm text-slate-300">
-            Date of birth
-            <input id="onboarding-date-of-birth" required aria-required="true" className="mt-1 w-full rounded-lg bg-slate-800 p-2 text-sm" type="date" value={form.dateOfBirth} onChange={(event) => setForm((prev) => ({ ...prev, dateOfBirth: event.target.value }))} />
-          </label>
-          <label htmlFor="onboarding-weight-kg" className="space-y-1 text-sm text-slate-300">
-            Weight (kg)
-            <input id="onboarding-weight-kg" required aria-required="true" className="mt-1 w-full rounded-lg bg-slate-800 p-2 text-sm" type="number" placeholder="Weight (kg)" value={form.weightKg} onChange={(event) => setForm((prev) => ({ ...prev, weightKg: event.target.value }))} />
-          </label>
-          <label htmlFor="onboarding-height-cm" className="space-y-1 text-sm text-slate-300">
-            Height (cm)
-            <input id="onboarding-height-cm" required aria-required="true" className="mt-1 w-full rounded-lg bg-slate-800 p-2 text-sm" type="number" placeholder="Height (cm)" value={form.heightCm} onChange={(event) => setForm((prev) => ({ ...prev, heightCm: event.target.value }))} />
-          </label>
+            <label htmlFor="onboarding-full-name" className="space-y-1 text-sm text-slate-300">
+              Full name
+              <input id="onboarding-full-name" required aria-required="true" className="mt-1 w-full rounded-lg bg-slate-800 p-2 text-sm" placeholder="Full name" value={form.fullName} onChange={(event) => setForm((prev) => ({ ...prev, fullName: event.target.value }))} />
+            </label>
+            <label htmlFor="onboarding-date-of-birth" className="space-y-1 text-sm text-slate-300">
+              Date of birth
+              <input id="onboarding-date-of-birth" required aria-required="true" className="mt-1 w-full rounded-lg bg-slate-800 p-2 text-sm" type="date" value={form.dateOfBirth} onChange={(event) => setForm((prev) => ({ ...prev, dateOfBirth: event.target.value }))} />
+            </label>
+            <label htmlFor="onboarding-weight-kg" className="space-y-1 text-sm text-slate-300">
+              Weight (kg)
+              <input id="onboarding-weight-kg" required aria-required="true" className="mt-1 w-full rounded-lg bg-slate-800 p-2 text-sm" type="number" placeholder="Weight (kg)" value={form.weightKg} onChange={(event) => setForm((prev) => ({ ...prev, weightKg: event.target.value }))} />
+            </label>
+            <label htmlFor="onboarding-height-cm" className="space-y-1 text-sm text-slate-300">
+              Height (cm)
+              <input id="onboarding-height-cm" required aria-required="true" className="mt-1 w-full rounded-lg bg-slate-800 p-2 text-sm" type="number" placeholder="Height (cm)" value={form.heightCm} onChange={(event) => setForm((prev) => ({ ...prev, heightCm: event.target.value }))} />
+            </label>
           </div>
         </div>
       ) : null}
       {step === 3 ? (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <p className="text-base font-medium text-slate-100">What&apos;s your current fitness level?</p>
           <select aria-label="Fitness level" className="w-full rounded-lg bg-slate-800 p-2 text-sm" value={form.fitnessLevel} onChange={(event) => setForm((prev) => ({ ...prev, fitnessLevel: event.target.value }))}>
-            <option value="beginner">Beginner</option>
-            <option value="intermediate">Intermediate</option>
-            <option value="advanced">Advanced</option>
+            <option value="beginner">Beginner — I&apos;m just getting started</option>
+            <option value="intermediate">Intermediate — I train occasionally</option>
+            <option value="advanced">Advanced — I train regularly</option>
           </select>
+          <label className="flex items-start gap-3 rounded-lg border border-orange-400/30 bg-orange-500/10 p-3 text-sm text-slate-200 cursor-pointer">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 cursor-pointer accent-orange-400"
+              checked={form.postnatal}
+              onChange={(event) => setForm((prev) => ({ ...prev, postnatal: event.target.checked }))}
+            />
+            <span>
+              <span className="font-medium text-orange-200">I&apos;m postnatal / recently postpartum</span>
+              <span className="block mt-0.5 text-slate-400">Forja will prioritise pelvic floor-safe exercises, avoid high-impact moves, and build you back up gently.</span>
+            </span>
+          </label>
         </div>
       ) : null}
       {step === 4 ? (
@@ -167,17 +187,19 @@ export function OnboardingWizard() {
       {step === 5 ? (
         <div className="space-y-3">
           <p className="text-base font-medium text-slate-100">How many days per week can you train?</p>
+          <p className="text-sm text-slate-400">Even 2–3 days is brilliant — consistency beats frequency every time.</p>
           <input aria-label="Days per week available" className="w-full rounded-lg bg-slate-800 p-2 text-sm" type="number" min={1} max={7} value={form.daysPerWeek} onChange={(event) => setForm((prev) => ({ ...prev, daysPerWeek: event.target.value }))} />
         </div>
       ) : null}
       {step === 6 ? (
         <div className="space-y-3">
-          <p className="text-base font-medium text-slate-100">How long are your sessions?</p>
+          <p className="text-base font-medium text-slate-100">How long can your sessions be?</p>
+          <p className="text-sm text-slate-400">Be honest — a real 20-minute workout beats an imaginary 60-minute one.</p>
           <select aria-label="Preferred session length" className="w-full rounded-lg bg-slate-800 p-2 text-sm" value={form.sessionLength} onChange={(event) => setForm((prev) => ({ ...prev, sessionLength: event.target.value }))}>
-            <option value="15">15 minutes</option>
-            <option value="30">30 minutes</option>
-            <option value="45">45 minutes</option>
-            <option value="60">60+ minutes</option>
+            <option value="15">15 minutes — nap-time sprint</option>
+            <option value="30">30 minutes — before the day kicks off</option>
+            <option value="45">45 minutes — I can carve this out</option>
+            <option value="60">60+ minutes — I have proper time</option>
           </select>
         </div>
       ) : null}
@@ -199,13 +221,15 @@ export function OnboardingWizard() {
       ) : null}
       {step === 8 ? (
         <div className="space-y-3">
-          <p className="text-base font-medium text-slate-100">Any health notes or injuries we should know about? (optional)</p>
-          <textarea aria-label="Health notes or injuries" className="min-h-24 w-full rounded-lg bg-slate-800 p-2 text-sm" placeholder="Health notes or injuries (optional)" value={form.healthNotes} onChange={(event) => setForm((prev) => ({ ...prev, healthNotes: event.target.value }))} />
+          <p className="text-base font-medium text-slate-100">Any health notes or injuries? (optional)</p>
+          <p className="text-sm text-slate-400">Mention things like a c-section scar, back pain, SPD, or diastasis recti — Forja will work around them.</p>
+          <textarea aria-label="Health notes or injuries" className="min-h-24 w-full rounded-lg bg-slate-800 p-2 text-sm" placeholder="e.g. 6 months postpartum, c-section, lower back pain" value={form.healthNotes} onChange={(event) => setForm((prev) => ({ ...prev, healthNotes: event.target.value }))} />
         </div>
       ) : null}
       {showPreview ? (
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-slate-100">Your preview plan</h3>
+          <h3 className="text-lg font-semibold text-slate-100">Your 4-week plan preview ✨</h3>
+          <p className="text-sm text-slate-400">Here&apos;s what Forja has built for you. Save it to start training.</p>
           {planPreview?.weeks?.map((week) => (
             <div key={week.week} className="space-y-1 rounded-lg bg-slate-800 p-3">
               <p className="font-semibold text-slate-100">Week {week.week}</p>
@@ -216,7 +240,7 @@ export function OnboardingWizard() {
               ))}
             </div>
           ))}
-          <Button onClick={handleSavePlan} disabled={isLoading}>Save and continue</Button>
+          <Button onClick={handleSavePlan} disabled={isLoading}>Save plan and get started</Button>
         </div>
       ) : null}
 
@@ -243,7 +267,7 @@ export function OnboardingWizard() {
             </Button>
           ) : (
             <Button onClick={handleGeneratePreview} disabled={isLoading}>
-              Generate plan
+              {isLoading ? "Building your plan…" : "Generate my plan"}
             </Button>
           )}
         </div>

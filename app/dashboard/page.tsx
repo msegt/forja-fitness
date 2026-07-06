@@ -40,6 +40,15 @@ function extractSessionLength(value: unknown): number | null {
   return null;
 }
 
+function getGreeting(name: string | null): string {
+  const hour = new Date().getHours();
+  const first = name ? name.split(" ")[0] : null;
+  const suffix = first ? `, ${first}` : "";
+  if (hour < 12) return `Good morning${suffix} 🌅`;
+  if (hour < 17) return `Good afternoon${suffix} ☀️`;
+  return `Good evening${suffix} 🌙`;
+}
+
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -50,16 +59,22 @@ export default async function DashboardPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
   let sessions: Session[] = [];
+  let profileName: string | null = null;
 
   if (user) {
-    const { data } = await supabase
-      .from("sessions")
-      .select("id, day_label, focus, exercises, completed, workout_plans(session_length_minutes)")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: true });
+    const [{ data: sessionData }, { data: profile }] = await Promise.all([
+      supabase
+        .from("sessions")
+        .select("id, day_label, focus, exercises, completed, workout_plans(session_length_minutes)")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true }),
+      supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
+    ]);
 
-    sessions = (data ?? []).map((session) => ({
+    profileName = profile?.full_name ?? null;
+    sessions = (sessionData ?? []).map((session) => ({
       id: session.id,
       day_label: session.day_label ?? "Session",
       focus: session.focus ?? "Training",
@@ -72,26 +87,46 @@ export default async function DashboardPage({
   const completed = sessions.filter((session) => session.completed).length;
   const completedPercentage = sessions.length > 0 ? Math.round((completed / sessions.length) * 100) : 0;
 
+  // Group sessions into weeks for a cleaner layout when all 4 weeks are present
+  const weekGroups: { label: string; sessions: Session[] }[] = [];
+  const weekMap = new Map<string, Session[]>();
+  for (const session of sessions) {
+    const match = session.day_label.match(/^(Week \d+)/i);
+    const key = match ? match[1] : "Sessions";
+    if (!weekMap.has(key)) weekMap.set(key, []);
+    weekMap.get(key)!.push(session);
+  }
+  for (const [label, wSessions] of weekMap) {
+    weekGroups.push({ label, sessions: wSessions });
+  }
+
+  const greeting = getGreeting(profileName);
+
   return (
     <main className="mx-auto min-h-screen w-full max-w-6xl space-y-8 px-4 py-8">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-slate-100">Weekly dashboard</h1>
-          <p className="text-slate-300">Track each session and keep your momentum moving.</p>
+          <h1 className="text-3xl font-bold text-slate-100">{greeting}</h1>
+          <p className="text-slate-300">Every session counts. Let&apos;s keep the momentum going.</p>
         </div>
         <div className="flex items-center gap-2">
+          <Link href="/chat"><Button variant="secondary">Ask Forja</Button></Link>
           <Link href="/holiday"><Button variant="secondary">Holiday mode</Button></Link>
           <Link href="/onboarding"><Button variant="secondary">Regenerate plan</Button></Link>
         </div>
       </header>
 
-      <section className="flex flex-wrap items-center gap-8 rounded-xl border border-slate-800 bg-slate-900/70 p-5">
-        <div>
-          <p className="text-sm text-slate-300">Current week completion</p>
-          <p className="text-2xl font-semibold text-slate-100">{completedPercentage}%</p>
-        </div>
-        <ProgressRing value={completedPercentage} />
-      </section>
+      {sessions.length > 0 ? (
+        <section className="flex flex-wrap items-center gap-8 rounded-xl border border-slate-800 bg-slate-900/70 p-5">
+          <div>
+            <p className="text-sm text-slate-300">Overall plan completion</p>
+            <p className="text-2xl font-semibold text-slate-100">{completedPercentage}%</p>
+            <p className="text-xs text-slate-500 mt-1">{completed} of {sessions.length} sessions done</p>
+          </div>
+          <ProgressRing value={completedPercentage} />
+        </section>
+      ) : null}
+
       {completionError ? (
         <>
           <ClearCompletionError />
@@ -101,28 +136,33 @@ export default async function DashboardPage({
         </>
       ) : null}
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {sessions.length > 0 ? (
-          sessions.map((session) => (
-            <div key={session.id} className="space-y-2">
-              <WorkoutCard session={session} completeAction={markSessionCompleteAction} returnPath="/dashboard" />
-              <Link className="text-sm text-orange-300 underline" href={`/dashboard/session/${session.id}`}>
-                View session details
-              </Link>
-            </div>
-          ))
-        ) : (
-          <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-5">
-            <p className="text-base font-medium text-slate-100">No sessions yet.</p>
-            <p className="mt-1 text-sm text-slate-300">
-              Answer a few quick questions and Forja will build your first four-week programme.
-            </p>
-            <div className="mt-4">
-              <Link href="/onboarding"><Button>Start onboarding</Button></Link>
-            </div>
-          </div>
-        )}
-      </section>
+      {sessions.length > 0 ? (
+        <div className="space-y-8">
+          {weekGroups.map(({ label, sessions: wSessions }) => (
+            <section key={label}>
+              <h2 className="mb-3 text-lg font-semibold text-slate-200">{label}</h2>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {wSessions.map((session) => (
+                  <div key={session.id} className="space-y-2">
+                    <WorkoutCard session={session} completeAction={markSessionCompleteAction} returnPath="/dashboard" />
+                    <Link className="text-sm text-orange-300 underline" href={`/dashboard/session/${session.id}`}>
+                      View exercises
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-6 space-y-3">
+          <p className="text-base font-medium text-slate-100">No sessions yet — let&apos;s change that! 💪</p>
+          <p className="text-sm text-slate-300">
+            Answer a few quick questions and Forja will build your first four-week programme, tailored to how much time you actually have.
+          </p>
+          <Link href="/onboarding"><Button>Build my plan</Button></Link>
+        </div>
+      )}
     </main>
   );
 }

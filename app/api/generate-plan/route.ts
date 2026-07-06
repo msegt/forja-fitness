@@ -47,12 +47,12 @@ export async function POST(request: NextRequest) {
       } = await supabase.auth.getUser();
 
       if (user) {
-        const firstWeek = weeks[0];
+        // Save the plan row
         const { data: planRow } = await supabase
           .from("workout_plans")
           .insert({
             user_id: user.id,
-            week_number: firstWeek?.week ?? 1,
+            week_number: 1,
             days_per_week: daysPerWeek,
             session_length_minutes: Number.isFinite(sessionLengthMinutes) ? sessionLengthMinutes : DEFAULT_SESSION_LENGTH_MINUTES,
             equipment: Array.isArray(profile.equipment) ? profile.equipment : [],
@@ -61,16 +61,19 @@ export async function POST(request: NextRequest) {
           .select("id")
           .single();
 
-        if (planRow?.id && firstWeek) {
-          await supabase.from("sessions").insert(
-            firstWeek.sessions.map((session) => ({
+        // Save ALL weeks of sessions, not just the first
+        if (planRow?.id) {
+          const allSessions = weeks.flatMap((week) =>
+            week.sessions.map((session) => ({
               plan_id: planRow.id,
               user_id: user.id,
-              day_label: session.day,
+              day_label: `Week ${week.week} – ${session.day}`,
               focus: session.focus,
               exercises: session.exercises,
-            })),
+            }))
           );
+
+          await supabase.from("sessions").insert(allSessions);
         }
       }
     }
