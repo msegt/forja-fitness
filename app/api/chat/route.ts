@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { chatWithForja } from "@/lib/gemini";
 import { createClient } from "@/lib/supabase/server";
+import { loadUserKeyConfig } from "@/lib/ai-client";
 
 export async function POST(request: NextRequest) {
   const { message } = (await request.json()) as { message?: string };
-
-  if (!message?.trim()) {
-    return NextResponse.json({ error: "Message is required" }, { status: 400 });
-  }
+  if (!message?.trim()) return NextResponse.json({ error: "Message is required" }, { status: 400 });
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Slim context — never send full plan JSON to Gemini
   let context: { name?: string; fitnessLevel?: string; goals?: string[]; sessionSummary?: string } = {};
+  let userKey = { provider: null as null, apiKey: null as null };
 
   if (user) {
     const [{ data: profile }, { data: plan }, { data: sessions }] = await Promise.all([
@@ -22,12 +20,13 @@ export async function POST(request: NextRequest) {
       supabase.from("sessions").select("focus, completed").eq("user_id", user.id).order("created_at", { ascending: true }).limit(12),
     ]);
 
-    // Build a short plain-text summary instead of raw JSON
+    userKey = await loadUserKeyConfig(user.id, supabase as Parameters<typeof loadUserKeyConfig>[1]);
+
     const completedCount = sessions?.filter((s) => s.completed).length ?? 0;
     const totalCount = sessions?.length ?? 0;
     const focusList = sessions?.slice(0, 4).map((s) => s.focus).join(", ") ?? "";
     const sessionSummary = plan
-      ? `${plan.days_per_week}d/wk, ${plan.session_length_minutes}min, equipment: ${(plan.equipment as string[] | null)?.join(",") ?? "none"}. Sessions: ${focusList}. Progress: ${completedCount}/${totalCount} done.`
+      ? `${plan.days_per_week}d/wk, ${plan.session_length_minutes}min. Sessions: ${focusList}. Progress: ${completedCount}/${totalCount} done.`
       : undefined;
 
     context = {
@@ -40,7 +39,7 @@ export async function POST(request: NextRequest) {
 
   let reply = "";
   try {
-    reply = await chatWithForja(context, message);
+    reply = await chatWithForja(context, message, userKey);
   } catch {
     return NextResponse.json({ error: "Unable to reach the AI right now. Please try again in a moment." }, { status: 502 });
   }
