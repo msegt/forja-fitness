@@ -1,13 +1,15 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { WorkoutPlan } from "@/types";
 
+const MODEL = "gemini-1.5-flash-8b";
+
 const PLAN_SYSTEM_PROMPT = [
   "You are Forja, a friendly, encouraging British personal trainer AI.",
   "Generate a structured 4-week progressive workout plan.",
   "Each week contains exactly the requested number of sessions.",
   "Each session includes:",
   '- A descriptive focus area (e.g. "Lower Body Strength & Core")',
-  "- 4–6 exercises with sets, reps or duration, and rest periods",
+  "- 4\u20136 exercises with sets, reps or duration, and rest periods",
   "- A short YouTube search query string for each exercise (in English) that would return a good instructional or follow-along video",
   "- Motivational notes tailored to their goals and level",
   "IMPORTANT: Respond with raw JSON only. Do not wrap the response in markdown code fences or any other formatting.",
@@ -24,12 +26,10 @@ function getClient() {
 }
 
 /**
- * Strips markdown code fences (```json ... ``` or ``` ... ```) from a string,
- * regardless of case, surrounding whitespace, or newline style.
+ * Extracts the JSON object/array from a raw string, handling code fences
+ * and any surrounding prose the model may have added.
  */
 function extractJson(raw: string): string {
-  // Try to extract content between the first { and last } (or [ and ])
-  // to handle any surrounding prose or code fence wrapping.
   const firstBrace = raw.indexOf("{");
   const firstBracket = raw.indexOf("[");
   const lastBrace = raw.lastIndexOf("}");
@@ -48,7 +48,6 @@ function extractJson(raw: string): string {
     return raw.slice(start, end + 1);
   }
 
-  // Fallback: strip code fences manually
   return raw.replace(/^```[\w]*\s*/i, "").replace(/\s*```\s*$/i, "").trim();
 }
 
@@ -102,7 +101,7 @@ export async function generateWorkoutPlan(profileData: unknown, daysPerWeek: num
     };
   }
 
-  const model = client.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = client.getGenerativeModel({ model: MODEL });
   const prompt = `${PLAN_SYSTEM_PROMPT}\n\nProfile data: ${JSON.stringify(profileData)}\nDays per week: ${daysPerWeek}`;
   const response = await model.generateContent(prompt);
   const raw = response.response.text();
@@ -125,7 +124,7 @@ export async function chatWithForja(context: unknown, message: string) {
     return "I'm here for you. Keep your effort steady today and focus on tidy movement quality.";
   }
 
-  const model = client.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = client.getGenerativeModel({ model: MODEL });
   const prompt = `You are Forja, a British personal trainer AI. You have access to this user's profile and current workout plan: ${JSON.stringify(
     context,
   )}. Answer questions, adjust workouts, provide motivation, swap exercises if needed. Always respond in British English.\n\nUser: ${message}`;
