@@ -3,30 +3,24 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const MODEL = "gemini-2.5-flash-lite";
 const RETRY_DELAYS_MS = [2000, 4000, 6000];
+const VALID_MUSCLES = "chest,shoulders,biceps,triceps,lats,traps,back,abs,core,obliques,glutes,quads,hamstrings,calves,hip flexors,lower back,pelvic floor";
 
 function isRetryable(error: unknown) {
   const msg = error instanceof Error ? error.message : String(error);
   return msg.includes("503") || msg.includes("high demand") || msg.includes("429");
 }
+function sleep(ms: number) { return new Promise<void>((r) => setTimeout(r, ms)); }
 
-function sleep(ms: number) {
-  return new Promise<void>((r) => setTimeout(r, ms));
-}
-
-async function ask(prompt: string): Promise<string> {
+async function askWithRetry(prompt: string): Promise<string> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error("No API key");
   const client = new GoogleGenerativeAI(key);
   const model = client.getGenerativeModel({ model: MODEL });
-  const res = await model.generateContent(prompt);
-  return res.response.text();
-}
-
-async function askWithRetry(prompt: string): Promise<string> {
   let lastError: unknown;
   for (let i = 0; i <= RETRY_DELAYS_MS.length; i++) {
     try {
-      return await ask(prompt);
+      const res = await model.generateContent(prompt);
+      return res.response.text();
     } catch (err) {
       lastError = err;
       if (!isRetryable(err) || i === RETRY_DELAYS_MS.length) throw err;
@@ -36,32 +30,52 @@ async function askWithRetry(prompt: string): Promise<string> {
   throw lastError;
 }
 
+// Accept a batch of exercise names and return details for all in one API call
 export async function POST(request: NextRequest) {
-  const { name } = (await request.json()) as { name?: string };
+  const body = (await request.json()) as { name?: string; names?: string[] };
 
-  if (!name || typeof name !== "string") {
-    return NextResponse.json({ error: "Exercise name is required" }, { status: 400 });
+  // Support both single name and batch names[]
+  const names: string[] = body.names?.length
+    ? body.names.filter((n) => typeof n === "string" && n.trim())
+    : body.name ? [body.name] : [];
+
+  if (names.length === 0) {
+    return NextResponse.json({ error: "At least one exercise name is required" }, { status: 400 });
   }
 
+  // One prompt for all exercises — drastically reduces API calls
   const prompt = [
-    `You are a personal trainer. For the exercise "${name}", respond with raw JSON only — no markdown fences.",`,
-    `Schema: { "instructions": string[], "muscles": string[] }`,
-    `instructions: 4-5 clear step-by-step strings on how to perform the exercise correctly.`,
-    `muscles: array of muscle group names targeted (e.g. ["glutes", "hamstrings", "core"]).`,
-    `Use common muscle names only: chest, shoulders, biceps, triceps, back, lats, traps, abs, core, obliques, glutes, quads, hamstrings, calves, hip flexors, lower back, pelvic floor.`,
+    `You are a personal trainer. For each exercise listed, return raw JSON only (no markdown).`,
+    `Schema: [{"name":string,"instructions":string[],"muscles":string[]}]`,
+    `instructions: 3-4 steps. muscles: 2-4 names from [${VALID_MUSCLES}].`,
+    `Exercises: ${names.map((n) => `"${n}"`).join(", ")}`,
   ].join(" ");
 
   try {
     const raw = await askWithRetry(prompt);
-    const firstBrace = raw.indexOf("{");
-    const lastBrace = raw.lastIndexOf("}");
-    const json = firstBrace !== -1 ? raw.slice(firstBrace, lastBrace + 1) : raw;
-    const parsed = JSON.parse(json) as { instructions?: string[]; muscles?: string[] };
+    // Extract JSON array
+    const s = raw.indexOf("[");
+    const e = raw.lastIndexOf("]");
+    const jsonStr = s !== -1 && e > s ? raw.slice(s, e + 1) : raw;
+    const parsed = JSON.parse(jsonStr) as Array<{ name: string; instructions?: string[]; muscles?: string[] }>;
 
-    return NextResponse.json({
-      instructions: Array.isArray(parsed.instructions) ? parsed.instructions : [],
-      muscles: Array.isArray(parsed.muscles) ? parsed.muscles : [],
-    });
+    // Return as a map keyed by name for easy lookup
+    const result: Record<string, { instructions: string[]; muscles: string[] }> = {};
+    for (const item of parsed) {
+      if (item.name) {
+        result[item.name] = {
+          instructions: Array.isArray(item.instructions) ? item.instructions : [],
+          muscles: Array.isArray(item.muscles) ? item.muscles : [],
+        };
+      }
+    }
+
+    // Also keep single-name compat response
+    if (names.length === 1 && result[names[0]]) {
+      return NextResponse.json({ ...result[names[0]], batch: result });
+    }
+
+    return NextResponse.json({ batch: result });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     return NextResponse.json({ error: msg }, { status: 503 });

@@ -11,22 +11,40 @@ type DetailState =
   | { status: "error"; message: string }
   | { status: "ready"; instructions: string[]; muscles: string[] };
 
+const CACHE_PREFIX = "forja_ex_";
+
+function readCache(name: string): { instructions: string[]; muscles: string[] } | null {
+  try {
+    const raw = localStorage.getItem(CACHE_PREFIX + name);
+    return raw ? (JSON.parse(raw) as { instructions: string[]; muscles: string[] }) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(name: string, data: { instructions: string[]; muscles: string[] }) {
+  try {
+    localStorage.setItem(CACHE_PREFIX + name, JSON.stringify(data));
+  } catch {
+    // storage full — silently ignore
+  }
+}
+
 export function ExerciseItem({ exercise }: { exercise: Exercise }) {
   const [done, setDone] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
   const [detail, setDetail] = useState<DetailState>(() => {
-    // If the exercise already has data (new plan), start ready immediately
+    // 1. Pre-baked in the exercise object (new plans)
     if (
-      Array.isArray(exercise.instructions) &&
-      exercise.instructions.length > 0 &&
-      Array.isArray(exercise.muscles) &&
-      exercise.muscles.length > 0
+      Array.isArray(exercise.instructions) && exercise.instructions.length > 0 &&
+      Array.isArray(exercise.muscles) && exercise.muscles.length > 0
     ) {
-      return {
-        status: "ready",
-        instructions: exercise.instructions,
-        muscles: exercise.muscles,
-      };
+      return { status: "ready", instructions: exercise.instructions, muscles: exercise.muscles };
+    }
+    // 2. Cached from a previous expand
+    if (typeof window !== "undefined") {
+      const cached = readCache(exercise.name);
+      if (cached) return { status: "ready", ...cached };
     }
     return { status: "idle" };
   });
@@ -41,33 +59,29 @@ export function ExerciseItem({ exercise }: { exercise: Exercise }) {
   async function handleToggle() {
     const opening = !showDetail;
     setShowDetail(opening);
+    if (!opening || detail.status !== "idle") return;
 
-    // Fetch lazily on first open if data is missing
-    if (opening && detail.status === "idle") {
-      setDetail({ status: "loading" });
-      try {
-        const res = await fetch("/api/exercise-detail", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: exercise.name }),
-        });
-        const payload = (await res.json()) as {
-          instructions?: string[];
-          muscles?: string[];
-          error?: string;
-        };
-        if (!res.ok || payload.error) {
-          setDetail({ status: "error", message: payload.error ?? "Could not load details" });
-        } else {
-          setDetail({
-            status: "ready",
-            instructions: payload.instructions ?? [],
-            muscles: payload.muscles ?? [],
-          });
-        }
-      } catch {
-        setDetail({ status: "error", message: "Network error — please try again" });
+    setDetail({ status: "loading" });
+    try {
+      const res = await fetch("/api/exercise-detail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: exercise.name }),
+      });
+      const payload = (await res.json()) as {
+        instructions?: string[];
+        muscles?: string[];
+        error?: string;
+      };
+      if (!res.ok || payload.error) {
+        setDetail({ status: "error", message: payload.error ?? "Could not load details" });
+        return;
       }
+      const data = { instructions: payload.instructions ?? [], muscles: payload.muscles ?? [] };
+      writeCache(exercise.name, data);
+      setDetail({ status: "ready", ...data });
+    } catch {
+      setDetail({ status: "error", message: "Network error — please try again" });
     }
   }
 
@@ -111,10 +125,8 @@ export function ExerciseItem({ exercise }: { exercise: Exercise }) {
         <span className="text-xs">{showDetail ? "▲" : "▼"}</span>
       </button>
 
-      {/* Detail panel */}
       {showDetail ? (
         <div className="space-y-4 pt-1">
-          {/* Loading */}
           {detail.status === "loading" ? (
             <div className="space-y-2">
               <div className="h-3 w-3/4 animate-pulse rounded bg-zinc-700" />
@@ -124,7 +136,6 @@ export function ExerciseItem({ exercise }: { exercise: Exercise }) {
             </div>
           ) : null}
 
-          {/* Error */}
           {detail.status === "error" ? (
             <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2">
               <p className="text-sm text-rose-300">{detail.message}</p>
@@ -138,7 +149,6 @@ export function ExerciseItem({ exercise }: { exercise: Exercise }) {
             </div>
           ) : null}
 
-          {/* Ready */}
           {detail.status === "ready" ? (
             <>
               {detail.muscles.length > 0 ? (
@@ -147,7 +157,6 @@ export function ExerciseItem({ exercise }: { exercise: Exercise }) {
                   <MuscleDiagram muscles={detail.muscles} />
                 </div>
               ) : null}
-
               {detail.instructions.length > 0 ? (
                 <div>
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">How to perform</p>
@@ -166,7 +175,6 @@ export function ExerciseItem({ exercise }: { exercise: Exercise }) {
             </>
           ) : null}
 
-          {/* YouTube link — always show if available */}
           {exercise.youtube_url ? (
             <a
               href={exercise.youtube_url}
